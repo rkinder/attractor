@@ -9,13 +9,12 @@ Attractor solves the problem of orchestrating multi-stage AI workflows by lettin
 ### Key Features
 
 - **Declarative Pipelines**: Define workflows as DOT graphs - visual, version-controllable, and human-readable
-- **Pluggable Handlers**: Each node type is backed by a handler implementing a common interface
-- **Checkpoint & Resume**: Automatic checkpointing enables crash recovery and resume
+- **Multi-Provider AI**: Access 100+ models from OpenAI, Anthropic, Google, xAI, and more through Kilo Gateway
+- **Smart Model Routing**: Automatic selection of optimal AI models based on task complexity and cost
 - **Human-in-the-Loop**: Built-in support for approval gates and manual oversight
+- **Checkpoint & Resume**: Automatic checkpointing enables crash recovery and resume
+- **Advanced Validation**: Pre-execution linting prevents runtime errors
 - **Edge-based Routing**: Sophisticated routing based on conditions, labels, and weights
-- **Unified LLM Client**: Provider-agnostic interface supporting OpenAI, Anthropic, Gemini, and more
-
-> 📚 **See the [Documentation](#documentation) section below for comprehensive guides and implementation details.**
 
 ## Quick Start
 
@@ -25,104 +24,70 @@ Attractor solves the problem of orchestrating multi-stage AI workflows by lettin
 npm install attractor
 ```
 
-### Basic Usage
+### Get AI Access (Recommended: Kilo Gateway)
 
-```javascript
-import { Attractor } from 'attractor';
+1. Visit [app.kilo.ai](https://app.kilo.ai) and get your API key
+2. Set up environment:
 
-// Create an Attractor instance
-const attractor = await Attractor.create();
-
-// Set up event listeners
-attractor.on('pipeline_start', ({ runId }) => {
-  console.log(`Pipeline started: ${runId}`);
-});
-
-attractor.on('node_execution_success', ({ nodeId, outcome }) => {
-  console.log(`Node completed: ${nodeId}`);
-});
-
-// Run a pipeline
-const result = await attractor.run('./my-workflow.dot');
-console.log('Pipeline result:', result);
+```bash
+export KILO_API_KEY="your-api-key-here"
+export KILO_CONFIG="balanced"  # budget|balanced|performance
 ```
 
-### Simple Pipeline Example
+### Your First Workflow
 
-Create a file called `simple-workflow.dot`:
+Create `hello-world.dot`:
 
 ```dot
-digraph SimpleWorkflow {
-    graph [goal="Run tests and report results"]
+digraph HelloWorld {
+    graph [goal="Analyze sentiment of a greeting"]
     
     start [shape=Mdiamond, label="Start"]
     exit  [shape=Msquare, label="Exit"]
 
-    run_tests [
-        label="Run Tests", 
-        prompt="Run the test suite and report the results"
+    greet [
+        label="Generate Greeting", 
+        prompt="Create a friendly hello message"
     ]
     
-    report [
-        label="Generate Report", 
-        prompt="Create a test report summarizing the results"
+    analyze [
+        label="Analyze Sentiment", 
+        prompt="Analyze the sentiment of this greeting: $last_response"
     ]
 
-    start -> run_tests -> report -> exit
+    start -> greet -> analyze -> exit
 }
 ```
 
-## DOT Pipeline Syntax
+Run it:
 
-### Graph Structure
+```bash
+# Using Kilo Gateway (recommended - 100+ models)
+node run-with-kilo.js hello-world.dot
 
-Every pipeline must be a `digraph` (directed graph) with exactly one start node and one exit node:
-
-```dot
-digraph MyPipeline {
-    graph [goal="Your pipeline goal"]
-    
-    start [shape=Mdiamond, label="Start"]  // Required start node
-    exit  [shape=Msquare, label="Exit"]   // Required exit node
-    
-    // Your workflow nodes here
-    start -> your_nodes -> exit
-}
+# Or with direct provider
+node -e "
+import('./src/index.js').then(async ({ Attractor }) => {
+  const attractor = await Attractor.create();
+  const result = await attractor.run('./hello-world.dot');
+  console.log('Success:', result.success);
+});
+"
 ```
 
-### Node Types (by Shape)
+### Pre-built Workflows
 
-| Shape | Handler Type | Description |
-|-------|-------------|-------------|
-| `Mdiamond` | `start` | Pipeline entry point |
-| `Msquare` | `exit` | Pipeline exit point |
-| `box` | `codergen` | LLM task (default for all nodes) |
-| `hexagon` | `wait.human` | Human-in-the-loop gate |
-| `diamond` | `conditional` | Conditional routing |
-| `component` | `parallel` | Parallel fan-out |
-| `tripleoctagon` | `parallel.fan_in` | Parallel fan-in |
-| `parallelogram` | `tool` | External tool execution |
+Try comprehensive workflows on your codebase:
 
-### Common Node Attributes
+```bash
+# Comprehensive code analysis (security, performance, quality)
+node run-with-kilo.js workflows/comprehensive-code-analysis.dot ./my-project
 
-```dot
-my_node [
-    label="Display Name",
-    prompt="LLM instruction text with $goal variable",
-    max_retries=3,
-    timeout="900s",
-    goal_gate=true
-]
-```
+# Generate complete documentation
+node run-with-kilo.js workflows/documentation-suite.dot ./my-project
 
-### Edge Attributes
-
-```dot
-node1 -> node2 [
-    label="Edge Label",
-    condition="outcome=success",
-    weight=10
-]
+# Create comprehensive test suite
+node run-with-kilo.js workflows/testing-pipeline.dot ./my-project
 ```
 
 ## Architecture
@@ -130,204 +95,248 @@ node1 -> node2 [
 Attractor is built on three foundational layers:
 
 ### 1. Unified LLM Client
+- **Multi-Provider Support**: OpenAI, Anthropic, Google Gemini, xAI Grok via Kilo Gateway
+- **Smart Model Routing**: Automatic selection based on task complexity and cost
+- **Cost Management**: Real-time tracking, budgets, and optimization
+- **Streaming & Tools**: Full streaming support and tool calling capabilities
 
-Provider-agnostic interface supporting:
-- **OpenAI**: GPT-4.1, GPT-5.2 series (via Responses API)
-- **Anthropic**: Claude Opus 4.6, Sonnet 4.5 (with extended thinking)
-- **Google**: Gemini 3 Pro/Flash (with grounding)
+### 2. Coding Agent Loop
+- **Autonomous Execution**: AI agents with developer tools (file ops, code execution)
+- **Context Management**: Conversation history and state across workflow steps
+- **Tool Integration**: File operations, shell commands, external APIs
+- **Loop Detection**: Prevents infinite cycles and manages output truncation
+
+### 3. Pipeline Orchestration
+- **DOT Parsing**: Full Graphviz DOT subset with sophisticated graph analysis
+- **Edge-based Routing**: Conditional branching, retry logic, parallel execution
+- **Human Gates**: Built-in approval processes with customizable interfaces
+- **Checkpointing**: Crash recovery and resume from any point
+
+## Essential DOT Syntax
+
+### Graph Structure
+Every pipeline needs exactly one start and one exit node:
+
+```dot
+digraph MyWorkflow {
+    graph [goal="Your workflow objective"]
+    
+    start [shape=Mdiamond, label="Start"]  // Required
+    exit  [shape=Msquare, label="Exit"]   // Required
+    
+    // Your workflow nodes
+    start -> task1 -> task2 -> exit
+}
+```
+
+### Node Types by Shape
+
+| Shape | Handler | Purpose |
+|-------|---------|---------|
+| `Mdiamond` | `start` | Pipeline entry point |
+| `Msquare` | `exit` | Pipeline termination |
+| `box` (default) | `codergen` | AI-powered tasks |
+| `hexagon` | `wait.human` | Human approval gates |
+| `diamond` | `conditional` | Branching logic |
+| `parallelogram` | `tool` | External tool execution |
+
+### Common Patterns
+
+**Linear Workflow:**
+```dot
+start -> analyze -> implement -> test -> deploy -> exit
+```
+
+**Conditional Branching:**
+```dot
+validate -> success [condition="outcome=success"]
+validate -> fix [condition="outcome!=success"]
+fix -> validate  // Retry loop
+```
+
+**Human Approval:**
+```dot
+review_gate [shape=hexagon, label="Code Review"]
+review_gate -> deploy [label="[A] Approve"]
+review_gate -> revise [label="[R] Request Changes"]
+```
+
+## Smart Model Configuration
+
+Use CSS-like stylesheets to configure AI models:
+
+```dot
+digraph SmartWorkflow {
+    graph [
+        goal="Multi-model analysis workflow",
+        model_stylesheet="
+            .analysis { 
+                model: claude-3-5-sonnet-20241022;
+                reasoning_effort: high;
+            }
+            .security { 
+                model: claude-opus-4-6;
+                temperature: 0.1;
+            }
+            .creative {
+                model: gpt-4o;
+                temperature: 0.9;
+            }
+        "
+    ]
+    
+    start -> analyze -> security_review -> documentation -> exit
+    
+    analyze [class="analysis", prompt="Analyze code structure"]
+    security_review [class="security", prompt="Security audit"] 
+    documentation [class="creative", prompt="Write user docs"]
+}
+```
+
+## Cost Management
+
+### Budget Controls
+```bash
+# Set daily budget limit
+export KILO_COST_BUDGET="5.00"  # $5 daily limit
+
+# Choose cost profile
+export KILO_CONFIG="budget"     # Optimized for cost
+export KILO_CONFIG="balanced"   # Recommended: performance/cost balance  
+export KILO_CONFIG="performance" # Maximum quality
+```
+
+### Usage Monitoring
+All workflows automatically track:
+- Cost breakdown by model and task
+- Performance metrics and success rates  
+- Efficiency recommendations
+- Budget alerts and forecasting
+
+View reports in `./logs/usage-tracking.json`
+
+## Event-Driven Monitoring
 
 ```javascript
-import { Client } from 'attractor';
+import { Attractor } from 'attractor';
 
-const client = await Client.fromEnv();
-const response = await client.complete({
-  model: 'claude-opus-4-6',
-  messages: [{ role: 'user', content: 'Hello!' }]
+const attractor = await Attractor.create();
+
+// Pipeline lifecycle
+attractor.on('pipeline_start', ({ runId, dotFile }) => {
+  console.log(`Starting: ${dotFile}`);
+});
+
+attractor.on('node_execution_success', ({ nodeId, outcome }) => {
+  console.log(`✅ ${nodeId}: ${outcome.message}`);
+});
+
+attractor.on('pipeline_complete', ({ success, duration }) => {
+  console.log(`Completed in ${duration}ms: ${success ? '✅' : '❌'}`);
+});
+
+const result = await attractor.run('./my-workflow.dot');
+```
+
+## Human-in-the-Loop
+
+Add human oversight at critical decision points:
+
+```dot
+security_gate [
+    shape=hexagon,
+    label="Security Review Required"
+]
+
+security_gate -> deploy [label="[A] Approve for production"]
+security_gate -> staging [label="[S] Deploy to staging first"] 
+security_gate -> reject [label="[R] Reject - security issues"]
+```
+
+Interactive prompts appear in terminal or can integrate with web UIs.
+
+## Validation & Testing
+
+### Pre-execution Validation
+```bash
+# Validate before running
+node -e "
+import('./src/index.js').then(async ({ Attractor }) => {
+  const attractor = await Attractor.create();
+  const issues = await attractor.validate('./my-workflow.dot');
+  console.log('Validation issues:', issues.length);
+});
+"
+```
+
+### Simulation Mode
+Test workflows without API costs:
+
+```javascript
+const attractor = await Attractor.create({
+  llm: { simulation: true }  // Mock AI responses
 });
 ```
 
-### 2. Coding Agent Loop
+## What Attractor Enables
 
-Autonomous agentic loop that:
-- Pairs LLMs with developer tools
-- Handles tool execution and context management  
-- Supports steering and follow-up messages
-- Implements loop detection and output truncation
+### For Individual Developers
+- **Automated Code Review**: AI-powered analysis in minutes instead of hours
+- **Documentation Generation**: Professional docs with zero manual writing
+- **Testing Assistance**: Comprehensive test suites generated automatically
+- **Learning Tool**: Best practices through AI recommendations
 
-```javascript
-import { Session, SessionConfig } from 'attractor';
+### For Teams  
+- **Consistent Quality**: Standardized AI-powered review across all projects
+- **Knowledge Sharing**: Capture team coding standards in reusable workflows
+- **Onboarding**: New members get AI guidance and mentoring
+- **Productivity**: Automate routine development tasks
 
-const session = new Session(providerProfile, executionEnv, config, llmClient);
-await session.processInput('Fix the login bug');
-```
+### For Organizations
+- **Cost Control**: Built-in budget management and usage analytics
+- **Compliance**: Audit trails and approval processes for regulations
+- **Scalability**: Apply consistent workflows across hundreds of projects
+- **ROI Tracking**: Detailed metrics on AI efficiency and benefits
 
-### 3. Pipeline Orchestration
+## Example Use Cases
 
-DOT-based workflow engine that:
-- Parses Graphviz DOT files into executable graphs
-- Traverses nodes with sophisticated edge selection
-- Manages context and checkpointing
-- Supports retry policies and failure routing
+- **Code Review Pipeline**: Analyze → Security audit → Performance check → Human approval → Deploy
+- **Testing Workflow**: Generate tests → Run coverage → Analyze gaps → Create additional tests
+- **Documentation Suite**: Code analysis → API docs → User guides → Review → Publish  
+- **Security Audit**: Scan vulnerabilities → Generate patches → Human review → Apply fixes
+- **Feature Development**: Plan → Implement → Test → Review → Deploy with gates
 
-## Advanced Features
-
-### Conditional Routing
-
-```dot
-validate -> gate [condition="outcome=success"]
-gate -> deploy [label="Success", condition="outcome=success"]  
-gate -> fix [label="Failed", condition="outcome!=success"]
-```
-
-### Goal Gates
-
-Mark critical nodes that must succeed:
-
-```dot
-deploy [goal_gate=true, prompt="Deploy to production"]
-```
-
-### Retry Policies
-
-```dot
-flaky_task [max_retries=5, retry_target="fallback_node"]
-```
-
-### Human Gates
-
-```dot
-review [
-    shape=hexagon,
-    label="Review Changes"
-]
-
-review -> approve [label="[A] Approve"]
-review -> reject  [label="[R] Request Changes"]
-```
-
-## Examples
-
-Check the `examples/` directory for complete workflows:
-
-- `simple-linear.dot` - Basic sequential workflow
-- `branching-workflow.dot` - Conditional branching with retry loops
-- `demo.js` - JavaScript example showing API usage
-
-## API Reference
-
-### Attractor Class
-
-```javascript
-const attractor = await Attractor.create(options);
-```
-
-**Methods:**
-- `run(dotFilePath, options)` - Execute a pipeline
-- `on(event, listener)` - Listen to pipeline events  
-- `registerHandler(type, handler)` - Register custom node handlers
-
-**Events:**
-- `pipeline_start` - Pipeline execution begins
-- `node_execution_start` - Node begins execution
-- `node_execution_success` - Node completes successfully
-- `edge_traversed` - Pipeline moves to next node
-- `pipeline_complete` - Pipeline finishes
-
-### Pipeline Context
-
-Thread-safe key-value store for sharing data between nodes:
-
-```javascript
-context.set('key', 'value');
-const value = context.get('key', 'default');
-```
-
-**Built-in Keys:**
-- `outcome` - Last node's execution status
-- `graph.goal` - Pipeline goal from DOT file
-- `current_node` - Currently executing node ID
-- `last_response` - Truncated last LLM response
-
-### Custom Handlers
-
-Implement the Handler interface to create custom node types:
-
-```javascript
-import { Handler, Outcome } from 'attractor';
-
-class MyHandler extends Handler {
-  async execute(node, context, graph, logsRoot) {
-    // Custom logic here
-    return Outcome.success('Custom task completed');
-  }
-}
-
-attractor.registerHandler('my_type', new MyHandler());
-```
-
-## What Attractor Does
-
-Attractor is a **workflow orchestration system** specifically designed for AI-powered software development pipelines. Here's what it enables:
-
-### 1. **Multi-Stage AI Workflows**
-- Chain together multiple LLM calls with different prompts and contexts
-- Pass data between stages through a shared context system
-- Handle complex branching logic based on AI responses
-
-### 2. **Visual Workflow Definition**
-- Define workflows as DOT graphs that can be visualized with Graphviz
-- Version control your workflows like code
-- Share and review workflow logic visually
-
-### 3. **Robust Execution**
-- Automatic checkpointing and resume after crashes
-- Configurable retry policies with exponential backoff
-- Sophisticated error handling and failure routing
-
-### 4. **Human Oversight**
-- Built-in human approval gates for critical decisions
-- Manual steering to redirect workflows mid-execution
-- Audit trails and execution logs for compliance
-
-### 5. **Provider Flexibility**
-- Use different AI models for different stages
-- Switch providers without changing workflow logic
-- Leverage provider-specific features (reasoning tokens, thinking, etc.)
-
-### Example Use Cases
-
-- **Code Review Pipeline**: Analyze code → Generate review → Human approval → Apply fixes
-- **Testing Workflow**: Run tests → Analyze failures → Generate fixes → Validate fixes  
-- **Documentation Pipeline**: Analyze code → Generate docs → Review → Publish
-- **Security Audit**: Scan code → Identify issues → Generate patches → Human review
-- **Feature Development**: Plan → Implement → Test → Deploy with approval gates
-
-Attractor excels at workflows where you need:
-- Multiple AI reasoning steps with different contexts
-- Human oversight and approval processes  
-- Robust error handling and retry logic
-- Visual representation of complex workflows
-- Audit trails and compliance requirements
-
-It's particularly valuable for "software factory" scenarios where AI agents perform software development tasks that require structured, repeatable, and auditable processes.
+Attractor excels at workflows requiring multiple AI reasoning steps, human oversight, robust error handling, and audit trails.
 
 ## Documentation
 
-Additional documentation is available in the `docs/` directory:
+### User Guides
+- **[Getting Started](docs/getting-started.md)** - Installation, first workflow, essential concepts
+- **[Kilo Integration](docs/kilo-integration.md)** - Access 100+ AI models with cost control  
+- **[Advanced Features](docs/advanced-features.md)** - Complex workflows, custom handlers, validation
 
-- **[Kilo Integration Guide](docs/KILO_INTEGRATION_GUIDE.md)** - Complete guide for using Attractor with Kilo Gateway to access hundreds of AI models
-- **[Kilo Implementation Summary](docs/KILO_IMPLEMENTATION_SUMMARY.md)** - Technical details of the Kilo Gateway integration implementation
-- **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - Detailed overview of the complete Attractor implementation
-- **[Final Completion Report](docs/FINAL_COMPLETION_REPORT.md)** - Comprehensive completion status and feature checklist
+### Developer Resources  
+- **[Developer Guide](docs/developer-guide.md)** - Architecture, extending Attractor, contributing
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+
+### Examples
+Check the `examples/` and `workflows/` directories for complete working examples:
+- `examples/simple-linear.dot` - Basic sequential workflow
+- `examples/branching-workflow.dot` - Conditional logic and retry loops  
+- `workflows/comprehensive-code-analysis.dot` - Complete code analysis pipeline
+- `workflows/documentation-suite.dot` - Full documentation generation
 
 ## Contributing
 
-Attractor is implemented according to the [StrongDM Attractor Specification](https://github.com/strongdm/attractor). Contributions should align with the specification's design principles:
+Attractor implements the [StrongDM Attractor Specification](https://github.com/strongdm/attractor). Contributions should align with these design principles:
 
 - **Declarative pipelines** over imperative scripts
 - **Pluggable handlers** for extensibility  
 - **Edge-based routing** for sophisticated control flow
-- **Provider-agnostic** LLM integration
+- **Provider-agnostic** AI integration
+- **Event-driven** architecture for observability
+
+See the [Developer Guide](docs/developer-guide.md) for architecture details and contribution guidelines.
 
 ## License
 
@@ -336,7 +345,5 @@ Apache-2.0 - See [LICENSE](LICENSE) file for details.
 ## Related Projects
 
 - [StrongDM Attractor Spec](https://github.com/strongdm/attractor) - The specification this implements
+- [Kilo Gateway](https://kilo.ai) - Access to 100+ AI models with unified API
 - [Graphviz](https://graphviz.org/) - For visualizing DOT workflows
-- [OpenAI API](https://platform.openai.com/) - LLM provider
-- [Anthropic Claude](https://www.anthropic.com/) - LLM provider  
-- [Google Gemini](https://ai.google.dev/) - LLM provider

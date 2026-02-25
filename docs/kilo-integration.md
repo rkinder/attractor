@@ -278,6 +278,45 @@ node run-with-kilo.js workflows/comprehensive-code-analysis.dot ./
 - [Kilo GitHub](https://github.com/Kilo-Org/kilocode)
 - [Attractor Issues](https://github.com/strongdm/attractor/issues)
 
+## 🔧 Gateway Integration (Alternative to Kilo)
+
+If you prefer to use a custom OpenAI-compatible gateway instead of Kilo directly:
+
+### Setup Gateway Connection
+```bash
+export GATEWAY_API_KEY="your-gateway-key"
+export GATEWAY_BASE_URL="https://your-gateway.com"
+export GATEWAY_DEFAULT_MODEL="gpt-4"
+```
+
+### Run with Gateway
+```bash
+# Use the gateway runner instead of Kilo
+node run-with-gateway.js workflows/comprehensive-code-analysis.dot ./your-project
+```
+
+### Gateway Configuration Options
+```javascript
+import { Attractor } from 'attractor';
+
+const attractor = await Attractor.create({
+    llm: {
+        provider: 'gateway',
+        gateway: {
+            base_url: 'https://your-gateway.com',
+            api_key: process.env.GATEWAY_API_KEY,
+            default_model: 'gpt-4',
+            auth_header: 'X-API-Key',  // Custom auth header
+            custom_headers: {
+                'X-Organization': 'your-org'
+            }
+        }
+    }
+});
+```
+
+The Gateway adapter works with any OpenAI-compatible API gateway, providing flexibility for enterprise deployments and custom model routing.
+
 ## 🎉 What's Next?
 
 1. **Try the workflows** on your own projects
