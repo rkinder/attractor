@@ -1,0 +1,132 @@
+digraph TestingPipeline {
+    graph [
+        goal="Comprehensive testing workflow including test generation, coverage analysis, and quality assessment",
+        rankdir=TB,
+        model_strategy="testing"
+    ]
+    
+    start [shape=Mdiamond, label="Start Testing Pipeline"]
+    exit  [shape=Msquare, label="Complete Testing"]
+    
+    // Phase 1: Test Analysis
+    analyze_testability [
+        label="Analyze Testability",
+        prompt="Examine the codebase to understand its testability. Identify functions, classes, and modules that need testing. Assess current test structure and identify gaps in test coverage.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    identify_test_scenarios [
+        label="Identify Test Scenarios",
+        prompt="Create a comprehensive list of test scenarios including unit tests, integration tests, edge cases, error conditions, and boundary value tests. Prioritize scenarios by risk and importance.",
+        context_hint="test_generation", 
+        complexity="high",
+        timeout="450s"
+    ]
+    
+    // Phase 2: Test Generation
+    generate_unit_tests [
+        label="Generate Unit Tests",
+        prompt="Create comprehensive unit tests for individual functions and classes. Include positive cases, negative cases, edge cases, and boundary conditions. Use appropriate testing frameworks and follow testing best practices.",
+        context_hint="test_generation",
+        complexity="high",
+        timeout="900s"
+    ]
+    
+    generate_integration_tests [
+        label="Generate Integration Tests",
+        prompt="Create integration tests that verify component interactions, API endpoints, database operations, and service communications. Include setup/teardown procedures and test data management.",
+        context_hint="test_generation",
+        complexity="high", 
+        timeout="600s"
+    ]
+    
+    create_e2e_tests [
+        label="Create E2E Tests",
+        prompt="Design end-to-end tests that simulate real user workflows. Include user interface testing, complete business process validation, and system-level verification tests.",
+        context_hint="test_generation",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // Phase 3: Test Quality Assessment
+    analyze_coverage [
+        label="Analyze Test Coverage",
+        prompt="Evaluate test coverage metrics including line coverage, branch coverage, and function coverage. Identify untested code paths and provide recommendations for improving coverage.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    assess_test_quality [
+        label="Assess Test Quality",
+        prompt="Review generated tests for quality, maintainability, and effectiveness. Check for test independence, proper assertions, clear naming, and appropriate test data. Identify flaky or brittle tests.",
+        context_hint="code_analysis", 
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    // Phase 4: Performance Testing
+    performance_tests [
+        label="Generate Performance Tests",
+        prompt="Create performance tests including load tests, stress tests, and benchmarks. Identify performance-critical paths and create tests to validate response times, throughput, and resource usage.",
+        context_hint="performance_analysis",
+        complexity="high",
+        timeout="500s"
+    ]
+    
+    // Phase 5: Human Review
+    human_review [
+        shape=hexagon,
+        label="Review Test Suite",
+        prompt="Review the complete test suite for quality and completeness"
+    ]
+    
+    // Phase 6: Test Documentation and Reporting
+    document_tests [
+        label="Document Test Strategy",
+        prompt="Create comprehensive test documentation including test strategy, test plan, execution procedures, and maintenance guidelines. Document test environments and data requirements.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    generate_test_report [
+        label="Generate Test Report", 
+        prompt="Create a detailed test report summarizing test coverage, test results, identified risks, and recommendations for test improvement. Include metrics and quality assessments.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    create_ci_integration [
+        label="CI/CD Integration Guide",
+        prompt="Provide guidance for integrating tests into CI/CD pipelines. Include configuration examples for popular CI systems, test automation strategies, and continuous testing best practices.",
+        context_hint="documentation",
+        complexity="medium", 
+        timeout="300s"
+    ]
+    
+    // Flow definition
+    start -> analyze_testability
+    analyze_testability -> identify_test_scenarios
+    identify_test_scenarios -> generate_unit_tests
+    generate_unit_tests -> generate_integration_tests
+    generate_integration_tests -> create_e2e_tests
+    create_e2e_tests -> analyze_coverage
+    analyze_coverage -> assess_test_quality
+    assess_test_quality -> performance_tests
+    performance_tests -> human_review
+    
+    // Human review branches
+    human_review -> document_tests [label="[A] Approve - Document"]
+    human_review -> generate_unit_tests [label="[U] Revise Unit Tests"]
+    human_review -> generate_integration_tests [label="[I] Revise Integration Tests"]
+    human_review -> analyze_testability [label="[S] Start Over"]
+    
+    // Documentation flow
+    document_tests -> generate_test_report
+    generate_test_report -> create_ci_integration
+    create_ci_integration -> exit
+}

@@ -1,0 +1,175 @@
+digraph DevelopmentLifecycle {
+    graph [
+        goal="Complete development lifecycle from feature planning to deployment with quality gates",
+        rankdir=TB,
+        model_strategy="development"  
+    ]
+    
+    start [shape=Mdiamond, label="Start Development"]
+    exit  [shape=Msquare, label="Complete Deployment"]
+    
+    // Phase 1: Planning & Design
+    analyze_requirements [
+        label="Analyze Requirements",
+        prompt="Analyze the feature requirements, user stories, and acceptance criteria. Identify technical challenges, dependencies, and potential risks. Create a clear understanding of what needs to be built.",
+        context_hint="code_analysis", 
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    design_solution [
+        label="Design Technical Solution",
+        prompt="Design a technical solution including architecture, data models, API design, and component interactions. Consider scalability, maintainability, and integration with existing systems.",
+        context_hint="code_analysis",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    create_implementation_plan [
+        label="Create Implementation Plan",
+        prompt="Break down the implementation into specific, actionable tasks. Estimate effort, identify dependencies, and create a development timeline. Include testing and documentation tasks.",
+        context_hint="documentation",
+        complexity="medium", 
+        timeout="300s"
+    ]
+    
+    // Phase 2: Implementation
+    implement_core_logic [
+        label="Implement Core Logic", 
+        prompt="Implement the main business logic and core functionality. Write clean, well-structured code following best practices. Include proper error handling and input validation.",
+        context_hint="code_analysis",
+        complexity="high",
+        timeout="900s"
+    ]
+    
+    implement_interfaces [
+        label="Implement Interfaces",
+        prompt="Implement user interfaces, API endpoints, and external integrations. Ensure proper data flow and user experience. Include input validation and error messaging.",
+        context_hint="code_analysis",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // Phase 3: Testing & Quality Assurance
+    write_tests [
+        label="Write Comprehensive Tests",
+        prompt="Create unit tests, integration tests, and end-to-end tests for all implemented functionality. Ensure good test coverage and include edge cases and error scenarios.",
+        context_hint="test_generation", 
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    code_review_prep [
+        label="Prepare for Code Review",
+        prompt="Review the implementation for code quality, adherence to standards, and completeness. Check for security issues, performance concerns, and maintainability. Prepare documentation for reviewers.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    // Phase 4: Human Quality Gates
+    technical_review [
+        shape=hexagon,
+        label="Technical Review",
+        prompt="Conduct technical review of implementation and tests"
+    ]
+    
+    // Phase 5: Security & Performance Validation
+    security_validation [
+        label="Security Validation",
+        prompt="Perform security review focusing on the new implementation. Check for vulnerabilities, proper authentication/authorization, input sanitization, and secure data handling.",
+        context_hint="security_review",
+        complexity="high",
+        priority="high",
+        timeout="450s"
+    ]
+    
+    performance_validation [
+        label="Performance Validation", 
+        prompt="Validate performance of the new implementation. Run performance tests, check for bottlenecks, measure response times, and ensure scalability requirements are met.",
+        context_hint="performance_analysis",
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    // Phase 6: Documentation & Deployment Preparation
+    update_documentation [
+        label="Update Documentation",
+        prompt="Update all relevant documentation including API docs, user guides, deployment instructions, and architectural diagrams. Ensure documentation accurately reflects the new functionality.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    prepare_deployment [
+        label="Prepare Deployment",
+        prompt="Prepare deployment artifacts, configuration files, database migrations, and deployment instructions. Create rollback procedures and monitoring setup.",
+        context_hint="documentation", 
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // Phase 7: Final Review & Deployment
+    deployment_review [
+        shape=hexagon,
+        label="Deployment Review",
+        prompt="Final review before deployment to production"
+    ]
+    
+    deploy_to_staging [
+        label="Deploy to Staging",
+        prompt="Deploy the feature to staging environment. Perform smoke tests and validation in staging. Verify all functionality works as expected in a production-like environment.",
+        context_hint="quick_tasks",
+        complexity="low", 
+        timeout="200s"
+    ]
+    
+    final_validation [
+        label="Final Validation",
+        prompt="Perform final validation in staging environment. Run automated tests, manual verification, and acceptance testing. Confirm readiness for production deployment.",
+        context_hint="test_generation",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    production_deployment [
+        label="Production Deployment Guide",
+        prompt="Provide step-by-step production deployment guide including deployment commands, configuration changes, monitoring setup, and post-deployment verification steps.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // Flow definition
+    start -> analyze_requirements
+    analyze_requirements -> design_solution
+    design_solution -> create_implementation_plan
+    create_implementation_plan -> implement_core_logic
+    implement_core_logic -> implement_interfaces
+    implement_interfaces -> write_tests
+    write_tests -> code_review_prep
+    code_review_prep -> technical_review
+    
+    // Technical review branches
+    technical_review -> security_validation [label="[A] Approve - Continue"]
+    technical_review -> implement_core_logic [label="[C] Revise Core Logic"]
+    technical_review -> implement_interfaces [label="[I] Revise Interfaces"] 
+    technical_review -> write_tests [label="[T] Improve Tests"]
+    technical_review -> analyze_requirements [label="[R] Revisit Requirements"]
+    
+    // Continue with validation
+    security_validation -> performance_validation
+    performance_validation -> update_documentation
+    update_documentation -> prepare_deployment
+    prepare_deployment -> deployment_review
+    
+    // Deployment review branches  
+    deployment_review -> deploy_to_staging [label="[D] Deploy to Staging"]
+    deployment_review -> security_validation [label="[S] Re-validate Security"]
+    deployment_review -> prepare_deployment [label="[P] Revise Deployment Plan"]
+    
+    // Final deployment flow
+    deploy_to_staging -> final_validation
+    final_validation -> production_deployment
+    production_deployment -> exit
+}

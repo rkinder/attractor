@@ -1,0 +1,113 @@
+digraph DocumentationSuite {
+    graph [
+        goal="Generate comprehensive project documentation including README, API docs, and user guides",
+        rankdir=TB,
+        model_strategy="documentation"
+    ]
+    
+    start [shape=Mdiamond, label="Start Documentation"]
+    exit  [shape=Msquare, label="Complete Documentation"]
+    
+    // Phase 1: Project Analysis
+    analyze_codebase [
+        label="Codebase Analysis",
+        prompt="Analyze the project structure, main functionality, dependencies, and purpose. Identify the target audience (developers, end users, contributors). Understand the project's value proposition and key features.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    identify_apis [
+        label="API Discovery",
+        prompt="Identify all public APIs, endpoints, functions, and interfaces. Document input/output parameters, data types, and usage patterns. Find examples of API usage in the codebase.",
+        context_hint="code_analysis", 
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    // Phase 2: Core Documentation
+    generate_readme [
+        label="Generate README",
+        prompt="Create a comprehensive README.md that includes: project overview, installation instructions, quick start guide, basic usage examples, contribution guidelines, and license information. Make it engaging and accessible to newcomers.",
+        context_hint="documentation",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    create_api_docs [
+        label="Create API Documentation", 
+        prompt="Generate detailed API documentation with clear descriptions, parameter specifications, return values, error codes, and usage examples. Use appropriate formatting (Markdown, JSDoc, etc.) and include code samples for each endpoint/function.",
+        context_hint="documentation",
+        complexity="high", 
+        timeout="900s"
+    ]
+    
+    // Phase 3: User Guides
+    write_user_guide [
+        label="Write User Guide",
+        prompt="Create a step-by-step user guide covering common use cases, workflows, and scenarios. Include screenshots, diagrams, and practical examples. Address frequently asked questions and troubleshooting tips.",
+        context_hint="documentation",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    create_dev_setup [
+        label="Development Setup Guide", 
+        prompt="Write a detailed development setup guide for contributors. Include environment setup, build instructions, testing procedures, development workflow, and debugging tips.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="450s"
+    ]
+    
+    // Phase 4: Advanced Documentation  
+    architecture_docs [
+        label="Architecture Documentation",
+        prompt="Document the system architecture, design decisions, component interactions, and data flow. Include architectural diagrams, design patterns used, and rationale for major technical decisions.",
+        context_hint="documentation",
+        complexity="high", 
+        timeout="600s"
+    ]
+    
+    // Phase 5: Review and Polish
+    human_review [
+        shape=hexagon,
+        label="Review Documentation",
+        prompt="Review all generated documentation for accuracy and completeness"
+    ]
+    
+    polish_docs [
+        label="Polish and Finalize",
+        prompt="Review and polish all documentation for consistency, clarity, and completeness. Ensure proper formatting, fix any errors, and optimize for readability. Add table of contents and cross-references where appropriate.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="400s"
+    ]
+    
+    generate_changelog [
+        label="Generate CHANGELOG",
+        prompt="Create a CHANGELOG.md following semantic versioning principles. Document version history, breaking changes, new features, bug fixes, and deprecations. Use clear, consistent formatting.",
+        context_hint="documentation", 
+        complexity="low",
+        timeout="200s"
+    ]
+    
+    // Flow definition
+    start -> analyze_codebase
+    analyze_codebase -> identify_apis
+    identify_apis -> generate_readme
+    generate_readme -> create_api_docs
+    create_api_docs -> write_user_guide
+    write_user_guide -> create_dev_setup
+    create_dev_setup -> architecture_docs
+    architecture_docs -> human_review
+    
+    // Human review options
+    human_review -> polish_docs [label="[A] Approve - Finalize"]
+    human_review -> generate_readme [label="[R] Revise README"]
+    human_review -> create_api_docs [label="[D] Revise API Docs"] 
+    human_review -> analyze_codebase [label="[S] Start Over"]
+    
+    // Final steps
+    polish_docs -> generate_changelog
+    generate_changelog -> exit
+}

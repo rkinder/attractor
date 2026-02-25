@@ -1,0 +1,166 @@
+digraph ComprehensiveCodeAnalysis {
+    graph [
+        goal="Perform thorough multi-model code analysis with security, performance, and quality assessment",
+        rankdir=TB,
+        model_strategy="code_analysis"
+    ]
+    
+    // Standard start/exit nodes
+    start [shape=Mdiamond, label="Start Analysis"]
+    exit  [shape=Msquare, label="Complete Analysis"]
+    
+    // Phase 1: Project Discovery & Structure Analysis
+    discover_project [
+        label="Project Discovery",
+        prompt="Analyze the project structure and identify the primary programming language, framework, and architecture patterns. Provide a high-level overview of the codebase organization, key directories, and main components. Focus on understanding the project's purpose and technical stack.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    analyze_architecture [
+        label="Architecture Analysis", 
+        prompt="Examine the software architecture in detail. Identify design patterns, architectural layers, component relationships, and data flow. Assess architectural quality, identify potential design issues, and suggest improvements. Consider scalability, maintainability, and extensibility aspects.",
+        context_hint="code_analysis",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // Phase 2: Security Analysis
+    security_scan [
+        label="Security Assessment",
+        prompt="Perform a comprehensive security analysis of the codebase. Look for common vulnerabilities including OWASP Top 10 issues, injection flaws, authentication/authorization problems, cryptographic issues, and insecure configurations. Identify sensitive data handling, API security concerns, and dependency vulnerabilities.",
+        context_hint="security_review",
+        complexity="high", 
+        priority="high",
+        timeout="900s"
+    ]
+    
+    dependency_audit [
+        label="Dependency Security Audit",
+        prompt="Analyze all project dependencies for known security vulnerabilities. Review package.json, requirements.txt, or equivalent dependency files. Check for outdated packages, known CVEs, and recommend security updates. Assess the security posture of third-party libraries.",
+        context_hint="security_review",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // Phase 3: Performance Analysis
+    performance_analysis [
+        label="Performance Assessment",
+        prompt="Analyze the codebase for performance issues and optimization opportunities. Look for inefficient algorithms, database query problems, memory leaks, CPU-intensive operations, and bottlenecks. Consider scalability concerns and suggest performance improvements.",
+        context_hint="performance_analysis", 
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // Phase 4: Code Quality Assessment
+    code_quality [
+        label="Code Quality Review",
+        prompt="Evaluate code quality across multiple dimensions: readability, maintainability, complexity, adherence to best practices, and coding standards. Identify code smells, duplicated code, overly complex functions, and areas needing refactoring. Assess documentation quality and naming conventions.",
+        context_hint="code_analysis",
+        complexity="medium",
+        timeout="450s"
+    ]
+    
+    test_coverage_analysis [
+        label="Test Coverage Analysis",
+        prompt="Analyze the testing strategy and coverage. Review unit tests, integration tests, and end-to-end tests. Identify untested code paths, missing test cases, and testing gaps. Assess test quality and suggest improvements to testing practices.",
+        context_hint="test_generation",
+        complexity="medium", 
+        timeout="300s"
+    ]
+    
+    // Phase 5: Human Review Gate
+    human_review [
+        shape=hexagon,
+        label="Review Findings",
+        prompt="Review all analysis results and determine next steps"
+    ]
+    
+    // Phase 6: Consolidation and Reporting
+    generate_summary [
+        label="Generate Executive Summary",
+        prompt="Create a comprehensive executive summary of all analysis findings. Prioritize issues by severity and impact. Provide actionable recommendations with implementation timelines. Include a risk assessment and suggested remediation roadmap.",
+        context_hint="documentation",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    create_detailed_report [
+        label="Create Detailed Technical Report",
+        prompt="Compile a detailed technical report including all findings, evidence, code examples, and specific remediation steps. Organize by category (security, performance, quality) with clear severity ratings. Include before/after code suggestions where applicable.",
+        context_hint="documentation", 
+        complexity="high",
+        timeout="900s"
+    ]
+    
+    generate_action_items [
+        label="Generate Action Items",
+        prompt="Create a prioritized action item list with specific, actionable tasks for developers. Include effort estimates, priority levels, and dependencies. Format as a developer-friendly checklist with clear acceptance criteria.",
+        context_hint="documentation",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // Flow definition
+    start -> discover_project
+    discover_project -> analyze_architecture
+    analyze_architecture -> security_scan
+    security_scan -> dependency_audit
+    dependency_audit -> performance_analysis 
+    performance_analysis -> code_quality
+    code_quality -> test_coverage_analysis
+    test_coverage_analysis -> human_review
+    
+    // Human review branches
+    human_review -> generate_summary [label="[A] Approve - Generate Reports"]
+    human_review -> security_scan [label="[R] Re-analyze Security"] 
+    human_review -> performance_analysis [label="[P] Re-analyze Performance"]
+    human_review -> discover_project [label="[S] Start Over"]
+    
+    // Reporting flow
+    generate_summary -> create_detailed_report
+    create_detailed_report -> generate_action_items
+    generate_action_items -> exit
+    
+    // Styling for visual clarity
+    subgraph cluster_discovery {
+        label="Phase 1: Discovery"
+        style=filled
+        color=lightblue
+        discover_project
+        analyze_architecture
+    }
+    
+    subgraph cluster_security {
+        label="Phase 2: Security"
+        style=filled  
+        color=lightcoral
+        security_scan
+        dependency_audit
+    }
+    
+    subgraph cluster_performance {
+        label="Phase 3: Performance"
+        style=filled
+        color=lightgreen
+        performance_analysis
+    }
+    
+    subgraph cluster_quality {
+        label="Phase 4: Quality"
+        style=filled
+        color=lightyellow
+        code_quality
+        test_coverage_analysis
+    }
+    
+    subgraph cluster_reporting {
+        label="Phase 5: Reporting"
+        style=filled
+        color=lightgray
+        generate_summary
+        create_detailed_report
+        generate_action_items
+    }
+}

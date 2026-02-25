@@ -1,0 +1,49 @@
+digraph CodeReviewWorkflow {
+    graph [goal="Perform comprehensive code review and generate actionable feedback"]
+    rankdir=TD
+    node [shape=box, timeout="900s"]
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+    
+    analyze_structure [
+        label="Analyze Code Structure",
+        prompt="Analyze the codebase structure, architecture patterns, and overall organization. Identify any structural issues or improvements."
+    ]
+    
+    review_security [
+        label="Security Review", 
+        prompt="Perform a security analysis of the code. Look for common vulnerabilities, insecure patterns, and potential security risks."
+    ]
+    
+    check_performance [
+        label="Performance Analysis",
+        prompt="Review the code for performance issues, bottlenecks, and optimization opportunities. Consider scalability and efficiency."
+    ]
+    
+    test_coverage [
+        label="Test Coverage Review",
+        prompt="Analyze test coverage and quality. Identify missing tests, weak test cases, and areas needing better testing."
+    ]
+    
+    human_review [
+        shape=hexagon,
+        label="Human Review Required"
+    ]
+    
+    generate_report [
+        label="Generate Final Report",
+        prompt="Compile all findings into a comprehensive code review report with prioritized recommendations and action items."
+    ]
+
+    start -> analyze_structure
+    analyze_structure -> review_security
+    review_security -> check_performance  
+    check_performance -> test_coverage
+    test_coverage -> human_review
+    
+    human_review -> generate_report [label="[A] Approve Findings"]
+    human_review -> analyze_structure [label="[R] Re-analyze"]
+    
+    generate_report -> exit
+}
