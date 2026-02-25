@@ -311,29 +311,117 @@ These are documentation/API surface issues that are easy to fix.
 **Fix:** Verify and add to main exports if missing  
 **Effort:** 5 minutes
 
-## 📋 **Updated Implementation Priority Recommendation**
+## 📋 **STRATEGIC IMPLEMENTATION PLAN: Hybrid Approach** 
 
-### **Phase 1: Quick Wins (1-2 days)**
-1. Fix ValidationEngine export
-2. Implement resume() method  
-3. Complete variable expansion ($last_response, $current_node)
-4. **NEW: Tool Handler** - High value, easy implementation
+### **🎯 Approach Rationale**
 
-### **Phase 2: High-Impact Web Features (1-2 weeks)**  
-1. **NEW: HTTP Server Mode** - Enables web integration and remote management
-2. **NEW: Comprehensive Event System** - Critical for production monitoring
-3. Complete goal gate retry logic
+After analyzing incomplete features vs. high-value new features, the optimal strategy is a **Hybrid Approach** that:
 
-### **Phase 3: Core Orchestration (2-3 weeks)**
-1. Implement parallel execution (major feature)
-2. **NEW: Manager Loop Handler** - Advanced pipeline supervision
-3. Add performance caching system
+1. **Fixes Critical Documentation Issues** - Restores credibility and user trust
+2. **Delivers High-Impact New Features** - Provides immediate differentiation and value  
+3. **Balances Risk vs. Reward** - Mixes low-risk completion with high-reward innovation
+4. **Maximizes User Satisfaction** - Both existing users (fixes) and new users (features) benefit
 
-### **Phase 4: Polish & Performance (1 week)**
-1. Context lifecycle events
-2. WebInterviewer implementation
-3. Advanced routing algorithms
-4. Concurrent execution (if needed)
+### **Phase 1: Critical Foundation (2-3 days) 🚀 IMMEDIATE PRIORITY**
+
+**Strategy:** Fix most critical incomplete features + add one high-value easy win
+**Timeline:** 2-3 days  
+**Risk:** Low  
+**Impact:** High user satisfaction + foundation stability
+
+1. **ValidationEngine Export Fix** *(5 minutes)*
+   - **Type:** Quick API Fix  
+   - **Rationale:** Trivial fix that improves user experience immediately
+   - **Implementation:** Add export alias in `src/index.js`
+
+2. **Resume() Method Implementation** *(1 hour)*
+   - **Type:** Complete Incomplete Feature
+   - **Rationale:** Critical missing functionality that users expect from docs
+   - **Implementation:** Expose checkpoint loading in Attractor class
+
+3. **Variable Expansion Enhancement** *(1-2 days)*
+   - **Type:** Complete Incomplete Feature  
+   - **Priority:** HIGH - Core workflow functionality
+   - **Missing:** `$last_response`, `$current_node`, `$key_name` expansion
+   - **Rationale:** Fundamental feature that users encounter in basic workflows
+
+4. **Tool Handler Implementation** *(2-3 days)*
+   - **Type:** High-Value New Feature
+   - **Priority:** HIGH - Easy implementation, immediate value
+   - **Value:** Enables external tool integration (shell commands, git, npm, docker)
+   - **Rationale:** Bridges AI workflows with existing toolchains
+
+**Phase 1 Outcome:** Solid foundation + major new capability + happy users
+
+### **Phase 2: High-Impact Production Features (1-2 weeks) 🌐 WEB-READY**
+
+**Strategy:** Transform Attractor into a production-ready web service
+**Timeline:** 1-2 weeks  
+**Risk:** Medium  
+**Impact:** Game-changing capabilities
+
+1. **HTTP Server Mode** *(1 week)*
+   - **Type:** Major New Feature
+   - **Value:** Transforms Attractor into web service
+   - **Rationale:** Enables web apps, remote execution, team collaboration
+   - **Implementation:** Express server + REST API + SSE events
+
+2. **Comprehensive Event System** *(3-5 days)*
+   - **Type:** Major New Feature  
+   - **Value:** Production monitoring and observability
+   - **Rationale:** Essential for real-world deployments
+   - **Implementation:** 14+ typed event classes + observer pattern
+
+3. **Goal Gate Retry Logic Completion** *(2-3 days)*
+   - **Type:** Complete Incomplete Feature
+   - **Priority:** MEDIUM - Important for production workflows
+   - **Rationale:** Finish what we started, needed for robust workflows
+
+**Phase 2 Outcome:** Production-ready system with web integration
+
+### **Phase 3: Advanced Orchestration (2-3 weeks) 🏗️ ADVANCED FEATURES**
+
+**Strategy:** Add sophisticated workflow capabilities  
+**Timeline:** 2-3 weeks
+**Risk:** High (complex features)
+**Impact:** Advanced use cases
+
+1. **Parallel Execution Implementation** *(2-3 weeks)*
+   - **Type:** Major Missing Feature
+   - **Complexity:** High - requires engine changes
+   - **Value:** Concurrent workflow execution
+   
+2. **Manager Loop Handler** *(1 week)*
+   - **Type:** Advanced New Feature
+   - **Value:** Pipeline supervision and orchestration
+   - **Rationale:** Enables complex multi-stage project management
+
+3. **Performance Caching System** *(1 week)*
+   - **Type:** New Feature  
+   - **Value:** Performance optimization
+   - **Rationale:** Essential for production scale
+
+### **Phase 4: Polish & Advanced Features (1-2 weeks) ✨ REFINEMENT**
+
+**Strategy:** Complete remaining incomplete features + advanced capabilities
+**Timeline:** 1-2 weeks
+**Risk:** Low-Medium  
+**Impact:** Quality of life improvements
+
+1. **Context Lifecycle Events** 
+   - Complete incomplete advanced context management
+   
+2. **WebInterviewer Implementation**
+   - Finish incomplete human-in-the-loop web interface
+   
+3. **Enhanced Validation System**
+   - Improve validation with better diagnostics
+   
+4. **Advanced Routing Algorithms**
+   - Polish incomplete edge weight routing
+
+5. **Concurrent Execution** (if needed)
+   - Add if performance requirements demand it
 
 ## 🎯 **Feature Value Assessment**
 
@@ -398,9 +486,88 @@ These features are **implementable in JavaScript** and would provide immediate v
 - External tool integration
 - Advanced workflow orchestration
 
+## 🎯 **HYBRID APPROACH: WHY THIS STRATEGY WINS**
+
+### **The Strategic Balance**
+
+| Approach | Incomplete Features First | New Features First | **Hybrid Approach** |
+|----------|---------------------------|-------------------|---------------------|
+| **Documentation Accuracy** | ✅ High | ❌ Low | ✅ Medium-High |
+| **User Satisfaction** | ⚠️ Fixes only | ✅ New value | ✅ Both fixes + value |
+| **Market Differentiation** | ❌ No advantage | ✅ High | ✅ High |
+| **Production Readiness** | ⚠️ Delayed | ✅ Fast | ✅ Balanced |
+| **Risk Level** | ✅ Low | ❌ High | ✅ Managed |
+| **Developer Morale** | ⚠️ Boring fixes | ✅ Exciting features | ✅ Mix of both |
+
+### **Decision Criteria for Prioritization**
+
+**Use this framework to adjust priorities based on your specific needs:**
+
+#### **Prioritize Incomplete Features IF:**
+- Documentation accuracy is critical for your reputation
+- You have existing users complaining about missing features
+- You prefer low-risk, predictable development
+- You have limited development time and need guaranteed progress
+
+#### **Prioritize New Features IF:**
+- You need to differentiate from competitors quickly
+- You're building for production deployment soon
+- You want to attract new users with exciting capabilities
+- You have appetite for higher-risk, higher-reward development
+
+#### **Use Hybrid Approach IF:** *(Recommended)*
+- You want to balance user satisfaction with innovation
+- You need both credibility (fixes) and market advantage (new features)
+- You can afford 2-3 days for critical foundation work
+- You want to maximize overall project success
+
+### **Success Metrics by Phase**
+
+**Phase 1 Success Indicators:**
+- [ ] All documented APIs work as expected
+- [ ] Variable expansion works in real workflows  
+- [ ] Tool handler enables git/npm/docker integration
+- [ ] User complaints about missing features drop to zero
+
+**Phase 2 Success Indicators:**
+- [ ] HTTP server enables web application integration
+- [ ] Event system provides rich monitoring data
+- [ ] Goal gates work reliably in production workflows
+- [ ] External teams can integrate Attractor as a service
+
+**Phase 3+ Success Indicators:**
+- [ ] Parallel execution handles complex workflows
+- [ ] Manager loop enables advanced orchestration
+- [ ] Performance meets production scale requirements
+- [ ] System supports enterprise-grade deployments
+
+### **Flexibility Guidelines**
+
+**You can adjust this plan based on:**
+- **User Feedback:** If users demand specific incomplete features, bump their priority
+- **Market Opportunities:** If a competitor launches similar features, accelerate new feature development
+- **Technical Discoveries:** If implementing one feature unlocks others easily, batch them together
+- **Resource Constraints:** Scale phases up/down based on available development time
+
+### **Emergency Pivots**
+
+**Stop everything and fix IF:**
+- Critical security vulnerability discovered
+- Major production bug affecting existing users
+- Specification changes that break compatibility
+
+**Accelerate new features IF:**
+- Competitor announces similar roadmap
+- Major user requests specific capability
+- Partnership opportunity requires specific features
+
+---
+
 **Last Updated:** February 24, 2026  
+**Strategy:** Hybrid Approach (Incomplete + New Features)  
 **Codebase Version:** Latest master branch  
 **Analysis Sources:** 
 - Our codebase implementation review
 - [anishkny/attractor Python implementation](https://github.com/anishkny/attractor)
 - StrongDM Attractor specification compliance
+- Strategic analysis of incomplete vs. new feature priorities
