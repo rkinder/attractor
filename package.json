@@ -1,0 +1,30 @@
+{
+  "name": "attractor",
+  "version": "1.0.0",
+  "description": "A DOT-based pipeline runner for orchestrating multi-stage AI workflows",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "ai",
+    "workflow",
+    "pipeline",
+    "llm",
+    "automation",
+    "graph",
+    "dot",
+    "graphviz"
+  ],
+  "author": "Attractor Implementation",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
