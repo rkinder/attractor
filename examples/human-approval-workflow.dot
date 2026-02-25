@@ -1,0 +1,77 @@
+digraph HumanApprovalWorkflow {
+    graph [
+        goal="Implement feature with human oversight",
+        model_stylesheet="
+            /* Use high-quality models for implementation */
+            .implementation {
+                model: claude-opus-4-6;
+                provider: anthropic;
+                reasoning_effort: high;
+                temperature: 0.3;
+            }
+            
+            /* Use faster models for simple tasks */
+            .simple {
+                model: claude-sonnet-4-5;
+                reasoning_effort: medium;
+                temperature: 0.7;
+            }
+            
+            /* Code generation gets special treatment */
+            .code {
+                model: gpt-5-2-codex;
+                provider: openai;
+                reasoning_effort: high;
+                temperature: 0.1;
+            }
+        "
+    ]
+    
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    plan [
+        class="simple",
+        label="Plan Feature",
+        prompt="Create a detailed implementation plan for $goal. Break it down into clear, actionable steps."
+    ]
+    
+    implement [
+        class="implementation,code",
+        label="Implement Feature", 
+        prompt="Implement the feature according to the plan. Write clean, well-documented code.",
+        goal_gate=true,
+        max_retries=2,
+        retry_target="fix_issues"
+    ]
+    
+    review_gate [
+        shape=hexagon,
+        label="Review Implementation",
+        timeout="300s"
+    ]
+    
+    deploy [
+        class="simple",
+        label="Deploy Feature",
+        prompt="Deploy the implemented feature to production. Ensure all checks pass."
+    ]
+    
+    fix_issues [
+        class="implementation,code",
+        label="Fix Issues",
+        prompt="Address the issues identified in the review. Make necessary corrections.",
+        retry_target="implement"
+    ]
+
+    start -> plan -> implement -> review_gate
+    
+    review_gate -> deploy [label="[A] Approve - Deploy"]
+    review_gate -> fix_issues [label="[F] Fix Issues"]
+    review_gate -> exit [label="[R] Reject - Cancel"]
+    
+    fix_issues -> review_gate
+    deploy -> exit
+}

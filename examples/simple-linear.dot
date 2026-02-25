@@ -1,0 +1,19 @@
+digraph SimpleLinear {
+    graph [goal="Run tests and report results"]
+    rankdir=LR
+
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare, label="Exit"]
+
+    run_tests [
+        label="Run Tests", 
+        prompt="Run the test suite and report the results. Include any failures and their details."
+    ]
+    
+    report [
+        label="Generate Report", 
+        prompt="Create a comprehensive test report based on the previous results. Summarize the overall status, number of tests passed/failed, and any critical issues that need attention."
+    ]
+
+    start -> run_tests -> report -> exit
+}

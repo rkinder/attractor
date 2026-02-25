@@ -1,0 +1,33 @@
+digraph BranchingWorkflow {
+    graph [goal="Implement and validate a new feature"]
+    rankdir=LR
+    node [shape=box, timeout="900s"]
+
+    start     [shape=Mdiamond, label="Start"]
+    exit      [shape=Msquare, label="Exit"]
+    
+    plan      [
+        label="Plan Implementation", 
+        prompt="Analyze the requirements and create a detailed implementation plan for $goal. Break down the work into specific, actionable steps."
+    ]
+    
+    implement [
+        label="Implement Feature", 
+        prompt="Implement the feature according to the plan. Write clean, well-documented code and follow best practices."
+    ]
+    
+    validate  [
+        label="Validate & Test", 
+        prompt="Run comprehensive tests on the implementation. Check functionality, edge cases, and integration points."
+    ]
+    
+    gate      [
+        shape=diamond, 
+        label="Tests Passing?"
+    ]
+
+    start -> plan -> implement -> validate -> gate
+    
+    gate -> exit      [label="Yes", condition="outcome=success"]
+    gate -> implement [label="No - Fix Issues", condition="outcome!=success"]
+}
