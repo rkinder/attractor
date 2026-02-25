@@ -15,6 +15,8 @@ Attractor solves the problem of orchestrating multi-stage AI workflows by lettin
 - **Edge-based Routing**: Sophisticated routing based on conditions, labels, and weights
 - **Unified LLM Client**: Provider-agnostic interface supporting OpenAI, Anthropic, Gemini, and more
 
+> 📚 **See the [Documentation](#documentation) section below for comprehensive guides and implementation details.**
+
 ## Quick Start
 
 ### Installation
@@ -308,6 +310,15 @@ Attractor excels at workflows where you need:
 - Audit trails and compliance requirements
 
 It's particularly valuable for "software factory" scenarios where AI agents perform software development tasks that require structured, repeatable, and auditable processes.
+
+## Documentation
+
+Additional documentation is available in the `docs/` directory:
+
+- **[Kilo Integration Guide](docs/KILO_INTEGRATION_GUIDE.md)** - Complete guide for using Attractor with Kilo Gateway to access hundreds of AI models
+- **[Kilo Implementation Summary](docs/KILO_IMPLEMENTATION_SUMMARY.md)** - Technical details of the Kilo Gateway integration implementation
+- **[Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)** - Detailed overview of the complete Attractor implementation
+- **[Final Completion Report](docs/FINAL_COMPLETION_REPORT.md)** - Comprehensive completion status and feature checklist
 
 ## Contributing
 
