@@ -76,6 +76,115 @@ These features have basic implementations but need completion to match the docum
 
 **Priority:** Medium - Important for long-running workflows
 
+## 🚀 **High-Value Features from Python Implementation** (New Discoveries)
+
+The following features were discovered in anishkny/attractor Python implementation and would add significant value to our JavaScript version:
+
+### 1. HTTP Server Mode (0% Complete)
+**Source Reference:** [Python server.py](https://github.com/anishkny/attractor/blob/main/src/attractor/server.py)
+**Value:** Enables web-based pipeline management and remote execution
+
+**What's Missing:**
+- Flask/Express-based HTTP server for pipeline management
+- REST API endpoints for pipeline submission and monitoring  
+- Server-Sent Events (SSE) for real-time pipeline updates
+- Background pipeline execution with thread management
+- Pipeline status tracking and context exposure
+
+**API Endpoints to Implement:**
+- `POST /pipelines` - Submit DOT source and start execution
+- `GET /pipelines/{id}` - Get pipeline status and progress
+- `GET /pipelines/{id}/events` - SSE stream of real-time events
+- `POST /pipelines/{id}/cancel` - Cancel running pipeline  
+- `GET /pipelines/{id}/context` - Get current context
+- `GET /health` - Health check
+
+**Priority:** High - Enables web integration and remote management
+
+**Estimated Effort:** Medium (1-2 weeks)
+
+### 2. Comprehensive Event System (10% Complete)
+**Source Reference:** [Python events.py](https://github.com/anishkny/attractor/blob/main/src/attractor/events.py)
+**Value:** Rich observability for monitoring, logging, and UI integration
+
+**What's Missing:**
+- Typed event system with 14+ event types
+- Event emitter with observer pattern
+- Pipeline lifecycle events (started, completed, failed)
+- Stage lifecycle events (started, completed, failed, retrying)
+- Parallel execution events
+- Human interaction events (interview started/completed/timeout)
+- Checkpoint events
+
+**Implementation Notes:**
+- Our current implementation has basic events but lacks comprehensive typing
+- Python version has detailed event classes with rich metadata
+- Integrates seamlessly with HTTP server for SSE streaming
+
+**Priority:** High - Critical for production monitoring and web UI
+
+**Estimated Effort:** Small-Medium (3-5 days)
+
+### 3. Tool Handler for Shell Commands (0% Complete)
+**Source Reference:** [Python handlers.py ToolHandler](https://github.com/anishkny/attractor/blob/main/src/attractor/handlers.py#L300-400)
+**Value:** Execute external commands, scripts, and integrations
+
+**What's Missing:**
+- ToolHandler for `parallelogram` shape nodes
+- Shell command execution with timeout support
+- Stdout/stderr capture and logging
+- Return code evaluation for success/failure
+- Context updates with command results
+
+**Features:**
+- Execute shell commands from DOT workflows
+- Capture and log command output
+- Configurable timeouts
+- Proper error handling and status reporting
+
+**Priority:** High - Enables integration with external tools
+
+**Estimated Effort:** Small (2-3 days)
+
+### 4. Manager Loop Handler (0% Complete)
+**Source Reference:** [Python handlers.py ManagerLoopHandler](https://github.com/anishkny/attractor/blob/main/src/attractor/handlers.py#L600-800)
+**Value:** Supervisor pattern for orchestrating child pipelines
+
+**What's Missing:**
+- ManagerLoopHandler for `house` shape nodes
+- Child pipeline supervision with observe/steer/wait cycle
+- Automatic child process management  
+- Telemetry ingestion from child checkpoints
+- Configurable polling intervals and stop conditions
+
+**Use Cases:**
+- Sprint-based development workflows
+- Hierarchical pipeline management
+- Long-running supervision tasks
+- Multi-stage project management
+
+**Priority:** Medium - Advanced orchestration feature
+
+**Estimated Effort:** Medium (1 week)
+
+### 5. Enhanced Validation System (30% Complete)
+**Source Reference:** [Python validation.py](https://github.com/anishkny/attractor/blob/main/src/attractor/validation.py)
+**Value:** More comprehensive validation with better error reporting
+
+**Current vs Python:**
+- Our implementation: Basic validation exists but API naming issues
+- Python implementation: 7 comprehensive lint rules with detailed diagnostics
+
+**Missing Enhancements:**
+- Diagnostic severity levels (ERROR, WARNING, INFO)
+- More detailed error messages with suggestions
+- `validate_or_raise()` convenience method
+- Extensible lint rule system
+
+**Priority:** Low-Medium - Quality of life improvement
+
+**Estimated Effort:** Small (1-2 days)
+
 ## ❌ **Not Implemented Features** (Missing)
 
 These features are documented but completely missing from the codebase.
@@ -202,23 +311,43 @@ These are documentation/API surface issues that are easy to fix.
 **Fix:** Verify and add to main exports if missing  
 **Effort:** 5 minutes
 
-## 📋 **Implementation Priority Recommendation**
+## 📋 **Updated Implementation Priority Recommendation**
 
 ### **Phase 1: Quick Wins (1-2 days)**
 1. Fix ValidationEngine export
 2. Implement resume() method  
 3. Complete variable expansion ($last_response, $current_node)
+4. **NEW: Tool Handler** - High value, easy implementation
 
-### **Phase 2: Core Features (1-2 weeks)**  
+### **Phase 2: High-Impact Web Features (1-2 weeks)**  
+1. **NEW: HTTP Server Mode** - Enables web integration and remote management
+2. **NEW: Comprehensive Event System** - Critical for production monitoring
+3. Complete goal gate retry logic
+
+### **Phase 3: Core Orchestration (2-3 weeks)**
 1. Implement parallel execution (major feature)
-2. Complete goal gate retry logic
+2. **NEW: Manager Loop Handler** - Advanced pipeline supervision
 3. Add performance caching system
 
-### **Phase 3: Polish (1 week)**
+### **Phase 4: Polish & Performance (1 week)**
 1. Context lifecycle events
 2. WebInterviewer implementation
 3. Advanced routing algorithms
 4. Concurrent execution (if needed)
+
+## 🎯 **Feature Value Assessment**
+
+**Highest ROI Features from Python Analysis:**
+1. **HTTP Server Mode** - Transforms Attractor into a service (web apps, CI/CD, remote management)
+2. **Tool Handler** - Enables external integrations (shell commands, APIs, file operations)  
+3. **Event System** - Production monitoring, logging, UI integration
+4. **Manager Loop Handler** - Advanced orchestration for complex workflows
+
+**Why These Features Are Valuable:**
+- **HTTP Server:** Enables web applications, remote execution, team collaboration
+- **Tool Handler:** Bridges gap between AI workflows and existing toolchains
+- **Event System:** Essential for production deployments and monitoring
+- **Manager Loop:** Enables sophisticated multi-stage project management workflows
 
 ## 🏗️ **Implementation Notes for Contributors**
 
@@ -244,10 +373,34 @@ Implement a multi-layer cache:
 - **Context Cache**: Cache expensive context computations
 - **TTL Management**: Automatic cleanup of expired cache entries
 
-## 📝 **Documentation Accuracy**
+## 🔍 **Analysis Sources**
 
-This TODO list was created by comparing the documented features in `docs/advanced-features.md` with the actual implementation in the codebase. All features listed here are either missing or incomplete compared to their documentation.
+This TODO list was created through multiple analysis phases:
+
+1. **Documentation vs Implementation:** Comparing `docs/advanced-features.md` with actual codebase
+2. **Python Implementation Analysis:** Reviewing [anishkny/attractor](https://github.com/anishkny/attractor) Python implementation for valuable features
+3. **Feature Gap Assessment:** Identifying high-value features that exist in Python but missing in our JavaScript implementation
+
+## 📊 **Key Findings from Python Analysis**
+
+The Python implementation by anishkny has several production-ready features that would significantly enhance our JavaScript version:
+
+- **HTTP Server Mode:** Full REST API with SSE events for web integration
+- **Tool Handler:** Shell command execution for external tool integration  
+- **Manager Loop Handler:** Advanced pipeline supervision and orchestration
+- **Comprehensive Events:** 14 typed event classes for rich observability
+- **Enhanced Validation:** Better error reporting and diagnostic system
+
+These features are **implementable in JavaScript** and would provide immediate value for:
+- Web application integration
+- CI/CD pipeline automation  
+- Production monitoring and observability
+- External tool integration
+- Advanced workflow orchestration
 
 **Last Updated:** February 24, 2026  
 **Codebase Version:** Latest master branch  
-**Analysis Method:** Comprehensive source code review vs. documentation claims
+**Analysis Sources:** 
+- Our codebase implementation review
+- [anishkny/attractor Python implementation](https://github.com/anishkny/attractor)
+- StrongDM Attractor specification compliance
