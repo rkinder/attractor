@@ -84,6 +84,18 @@ export {
 export { WaitForHumanHandler } from './handlers/human.js';
 
 export {
+  ToolHandler
+} from './handlers/tool.js';
+
+export {
+  ParallelHandler
+} from './handlers/parallel.js';
+
+export {
+  FanInHandler
+} from './handlers/fanin.js';
+
+export {
   Interviewer,
   ConsoleInterviewer,
   WebInterviewer,
@@ -108,6 +120,10 @@ export {
   StylesheetApplicator,
   PredefinedStylesheets
 } from './styling/stylesheet.js';
+
+export { DirectoryWorkflowLoader } from './workflow/directory-loader.js';
+
+export { StackManagerLoopHandler } from './handlers/stack-manager-loop.js';
 
 // Import classes for internal use
 import { HandlerRegistry } from './handlers/registry.js';
@@ -172,11 +188,17 @@ export class Attractor {
     const { StartHandler, ExitHandler, ConditionalHandler } = await import('./handlers/basic.js');
     const { CodergenHandler } = await import('./handlers/codergen.js');
     const { WaitForHumanHandler } = await import('./handlers/human.js');
+    const { ToolHandler } = await import('./handlers/tool.js');
+    const { ParallelHandler } = await import('./handlers/parallel.js');
+    const { StackManagerLoopHandler } = await import('./handlers/stack-manager-loop.js');
     
     this.handlerRegistry.register('start', new StartHandler());
     this.handlerRegistry.register('exit', new ExitHandler());
     this.handlerRegistry.register('conditional', new ConditionalHandler());
     this.handlerRegistry.register('wait.human', new WaitForHumanHandler());
+    this.handlerRegistry.register('tool', new ToolHandler());
+    this.handlerRegistry.register('parallel', new ParallelHandler(this.handlerRegistry));
+    this.handlerRegistry.register('stack.manager_loop', new StackManagerLoopHandler());
     
     // Set codergen as default for untyped nodes
     this.handlerRegistry.setDefault(new CodergenHandler());

@@ -75,6 +75,32 @@ import('./src/index.js').then(async ({ Attractor }) => {
 "
 ```
 
+### Directory-based Workflows
+
+The Attractor system also supports workflows defined as directories, which allows for more organized and maintainable workflow definitions:
+
+```
+workflow-directory/
+├── workflow.dot          # Main DOT file containing the workflow graph
+└── prompts/              # Directory containing prompt files
+    ├── node1.txt         # Prompt for node1
+    ├── node2.txt         # Prompt for node2
+    └── ...
+```
+
+You can now run workflows using either:
+1. A direct DOT file:
+   ```bash
+   node run.js path/to/workflow.dot
+   ```
+
+2. A directory containing a workflow.dot and prompts:
+   ```bash
+   node run.js path/to/workflow-directory
+   ```
+
+This feature enables you to separate your DOT workflow definition from long prompt texts, making workflows more readable and maintainable.
+
 ### Pre-built Workflows
 
 Try comprehensive workflows on your codebase:
@@ -139,6 +165,8 @@ digraph MyWorkflow {
 | `hexagon` | `wait.human` | Human approval gates |
 | `diamond` | `conditional` | Branching logic |
 | `parallelogram` | `tool` | External tool execution |
+| `component` | `parallel` | Parallel branch execution |
+| `tripleoctagon` | `parallel.fan_in` | Branch consolidation |
 
 ### Common Patterns
 
@@ -320,9 +348,11 @@ Attractor excels at workflows requiring multiple AI reasoning steps, human overs
 - **[API Reference](docs/api-reference.md)** - Complete API documentation
 
 ### Examples
+
 Check the `examples/` and `workflows/` directories for complete working examples:
 - `examples/simple-linear.dot` - Basic sequential workflow
 - `examples/branching-workflow.dot` - Conditional logic and retry loops  
+- `examples/directory-workflow/` - Directory-based workflow with separate prompt files
 - `workflows/comprehensive-code-analysis.dot` - Complete code analysis pipeline
 - `workflows/documentation-suite.dot` - Full documentation generation
 
