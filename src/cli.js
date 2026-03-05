@@ -55,7 +55,7 @@ async function validateDotFile(dotFilePath) {
 }
 
 async function runWorkflow(dotFilePath, options) {
-  // Set environment variables from CLI options
+  // Set environment variables from CLI options (CLI flags override env vars)
   if (options.gatewayConfig) {
     process.env.KILO_CONFIG = options.gatewayConfig;
   }
@@ -117,6 +117,12 @@ async function runWorkflow(dotFilePath, options) {
   }
 }
 
+// Handle SIGINT for graceful exit
+process.on('SIGINT', () => {
+  console.log('\nInterrupted by user');
+  process.exit(130);
+});
+
 // Main program setup
 program
   .name('attractor')
@@ -135,13 +141,19 @@ program
   .option('--logs <dir>', 'Write logs to specified directory', './logs')
   .option('--resume <run-id>', 'Resume from specified checkpoint')
   .option('--max-tokens <value>', 'Override token limit for LLM calls')
+  .addHelpText('after', `
+Examples:
+  $ attractor run workflow.dot
+  $ attractor run workflow.dot --logs ./my-logs
+  $ attractor run workflow.dot --gateway-config balanced
+  $ attractor run workflow.dot --resume run-2024-01-15-abc123`)
   .action(async (dotFile, options) => {
     // Validate file exists
     try {
       await fs.access(dotFile);
     } catch {
       console.error(`Error: File not found: ${dotFile}`);
-      console.error('Usage: attractor run <dot-file>');
+      console.error(`Try 'attractor run --help' for more information`);
       process.exit(2);
     }
     
@@ -153,13 +165,16 @@ program
 program
   .command('validate <dot-file>')
   .description('Validate a DOT file without executing')
+  .addHelpText('after', `
+Examples:
+  $ attractor validate workflow.dot`)
   .action(async (dotFile) => {
     // Validate file exists
     try {
       await fs.access(dotFile);
     } catch {
       console.error(`Error: File not found: ${dotFile}`);
-      console.error('Usage: attractor validate <dot-file>');
+      console.error(`Try 'attractor validate --help' for more information`);
       process.exit(2);
     }
     
