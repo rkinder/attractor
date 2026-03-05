@@ -1,0 +1,20 @@
+digraph MCPWorkflow {
+    rankdir=LR;
+    
+    // Start node
+    start [shape=Mdiamond label="Start" type="start"];
+    
+    // MCP tool invocation
+    read_file [shape=box label="Read File" type="mcp" mcp_server="filesystem" mcp_tool="read_file" mcp_args="{\"path\": \"/tmp/test.txt\"}"];
+    
+    // Another MCP tool
+    search [shape=box label="Search" type="mcp" mcp_server="brave-search" mcp_tool="search" mcp_args="{\"query\": \"attractor workflow\"}"];
+    
+    // Exit node
+    exit [shape=Msquare label="Exit" type="exit"];
+    
+    // Edges
+    start -> read_file;
+    read_file -> search;
+    search -> exit;
+}
