@@ -1,0 +1,1 @@
+Analyze the following data: $data

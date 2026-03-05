@@ -10,6 +10,7 @@ import { Outcome, StageStatus } from './outcome.js';
 import { DOTParser } from './parser.js';
 import { PipelineLinter } from '../validation/linter.js';
 import { ModelStylesheet, StylesheetApplicator } from '../styling/stylesheet.js';
+import { DirectoryWorkflowLoader } from '../workflow/directory-loader.js';
 
 export class PipelineEngine extends EventEmitter {
   constructor(handlerRegistry, config = {}) {
@@ -37,10 +38,13 @@ export class PipelineEngine extends EventEmitter {
     try {
       this.emit('pipeline_start', { runId, dotFilePath, logsDir });
       
+      // Load workflow using either file or directory-based loader
+      const workflowLoader = new DirectoryWorkflowLoader();
+      const { dotText, prompts } = await workflowLoader.load(dotFilePath);
+      
       // Parse phase
-      const dotText = await fs.readFile(dotFilePath, 'utf-8');
       const parser = new DOTParser();
-      const graph = parser.parse(dotText);
+      const graph = workflowLoader.parseWithPrompts(dotText, prompts);
       
       // Validate phase
       this._validateGraph(graph);

@@ -1,0 +1,29 @@
+digraph ComplexWorkflow {
+    rankdir=LR;
+    
+    // Start node
+    start [shape=Mdiamond label="Start" type="start"];
+    
+    // Analysis node
+    analyze [shape=box label="Analyze" type="tool"];
+    
+    // Parallel processing
+    process [shape=component label="Process" type="parallel"];
+    
+    // FanIn consolidation
+    consolidate [shape=tripleoctagon label="Consolidate" type="parallel.fan_in"];
+    
+    // Validation
+    validate [shape=diamond label="Validate" type="conditional"];
+    
+    // Exit node
+    exit [shape=Msquare label="Exit" type="exit"];
+    
+    // Edges
+    start -> analyze;
+    analyze -> process;
+    process -> consolidate;
+    consolidate -> validate;
+    validate -> exit [label="Success"];
+    validate -> analyze [label="Retry", weight=10];
+}
