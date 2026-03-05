@@ -1,0 +1,27 @@
+digraph ToolExample {
+  start [shape=Mdiamond]
+  exit [shape=Msquare]
+  
+  listFiles [
+    shape=parallelogram
+    label="List Files"
+    tool_command="ls -la"
+    timeout=5000
+  ]
+  
+  npmInstall [
+    shape=parallelogram
+    label="Install Dependencies"
+    tool_command="npm install"
+    timeout=120000
+  ]
+  
+  runTests [
+    shape=parallelogram
+    label="Run Tests"
+    tool_command="npm test"
+    timeout=60000
+  ]
+  
+  start -> listFiles -> npmInstall -> runTests -> exit
+}
