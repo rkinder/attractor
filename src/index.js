@@ -96,6 +96,10 @@ export {
 } from './handlers/fanin.js';
 
 export {
+  MCPHandler
+} from './handlers/mcp.js';
+
+export {
   Interviewer,
   ConsoleInterviewer,
   WebInterviewer,
@@ -124,6 +128,8 @@ export {
 export { DirectoryWorkflowLoader } from './workflow/directory-loader.js';
 
 export { StackManagerLoopHandler } from './handlers/stack-manager-loop.js';
+
+export { MCPClient } from './mcp/client.js';
 
 // Import classes for internal use
 import { HandlerRegistry } from './handlers/registry.js';
@@ -191,6 +197,12 @@ export class Attractor {
     const { ToolHandler } = await import('./handlers/tool.js');
     const { ParallelHandler } = await import('./handlers/parallel.js');
     const { StackManagerLoopHandler } = await import('./handlers/stack-manager-loop.js');
+    const { MCPHandler } = await import('./handlers/mcp.js');
+    const { MCPClient } = await import('./mcp/client.js');
+    
+    // Create MCP client and load configuration
+    const mcpClient = new MCPClient();
+    await mcpClient.loadConfig();
     
     this.handlerRegistry.register('start', new StartHandler());
     this.handlerRegistry.register('exit', new ExitHandler());
@@ -199,13 +211,24 @@ export class Attractor {
     this.handlerRegistry.register('tool', new ToolHandler());
     this.handlerRegistry.register('parallel', new ParallelHandler(this.handlerRegistry));
     this.handlerRegistry.register('stack.manager_loop', new StackManagerLoopHandler());
+    this.handlerRegistry.register('mcp', new MCPHandler(mcpClient));
+    
+    // Store MCP client for cleanup
+    this.mcpClient = mcpClient;
     
     // Set codergen as default for untyped nodes
     this.handlerRegistry.setDefault(new CodergenHandler());
   }
 
   async run(dotFilePath, options = {}) {
-    return await this.engine.run(dotFilePath, options);
+    try {
+      return await this.engine.run(dotFilePath, options);
+    } finally {
+      // Cleanup MCP servers after pipeline completes
+      if (this.mcpClient) {
+        await this.mcpClient.cleanup();
+      }
+    }
   }
 
   on(event, listener) {
