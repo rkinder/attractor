@@ -1,0 +1,27 @@
+digraph ParallelExample {
+  graph [goal="Process multiple data sources in parallel"]
+  
+  start [shape=Mdiamond]
+  exit [shape=Msquare]
+  
+  parallel [
+    shape=component
+    label="Parallel Processing"
+    max_parallel=3
+  ]
+  
+  process1 [label="Process Source 1", prompt="Analyze dataset 1"]
+  process2 [label="Process Source 2", prompt="Analyze dataset 2"]
+  process3 [label="Process Source 3", prompt="Analyze dataset 3"]
+  
+  consolidate [label="Consolidate Results", prompt="Merge: $parallel.results"]
+  
+  start -> parallel
+  parallel -> process1
+  parallel -> process2
+  parallel -> process3
+  process1 -> consolidate
+  process2 -> consolidate
+  process3 -> consolidate
+  consolidate -> exit
+}
