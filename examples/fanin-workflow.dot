@@ -1,0 +1,52 @@
+digraph FanInExample {
+  graph [goal="Compare multiple approaches to solving a problem"]
+  
+  start [shape=Mdiamond]
+  exit [shape=Msquare]
+  
+  parallel [
+    shape=component
+    label="Parallel Analysis"
+    max_parallel=3
+  ]
+  
+  approach1 [
+    shape=box
+    label="Approach 1: Method A"
+    prompt="Analyze using method A: $goal"
+  ]
+  
+  approach2 [
+    shape=box
+    label="Approach 2: Method B"
+    prompt="Analyze using method B: $goal"
+  ]
+  
+  approach3 [
+    shape=box
+    label="Approach 3: Method C"
+    prompt="Analyze using method C: $goal"
+  ]
+  
+  consolidate [
+    shape=tripleoctagon
+    label="Consolidate Results"
+    prompt="Compare and synthesize the following approaches to: $goal"
+  ]
+  
+  recommend [
+    shape=box
+    label="Make Recommendation"
+    prompt="Based on the consolidated analysis, recommend the best approach"
+  ]
+  
+  start -> parallel
+  parallel -> approach1
+  parallel -> approach2
+  parallel -> approach3
+  approach1 -> consolidate
+  approach2 -> consolidate
+  approach3 -> consolidate
+  consolidate -> recommend
+  recommend -> exit
+}
