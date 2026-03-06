@@ -40,28 +40,92 @@ class KiloWorkflowRunner {
     };
   }
 
-  async initialize() {
-    // Validate Kilo API key
-    if (!process.env.KILO_API_KEY) {
-      throw new Error('KILO_API_KEY environment variable is required');
+  static async _loadEnvFile() {
+    if (process.env.KILO_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY) {
+      return;
     }
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const envPaths = [path.join(process.cwd(), '.env'), path.resolve('.env')];
+      for (const envPath of envPaths) {
+        try {
+          const content = await fs.readFile(envPath, 'utf-8');
+          for (const line of content.split('\n')) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            const eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+              const key = trimmed.slice(0, eqIndex).trim();
+              let value = trimmed.slice(eqIndex + 1).trim();
+              if ((value.startsWith('"') && value.endsWith('"')) ||
+                  (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+              }
+              if (!process.env[key]) process.env[key] = value;
+            }
+          }
+        } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ }
+  }
 
-    // Create Kilo adapter with specified configuration
-    console.log(`🔧 Initializing Kilo Gateway (${this.options.kiloConfig} configuration)...`);
+  async initialize() {
+    // Load .env file if present
+    await KiloWorkflowRunner._loadEnvFile();
     
-    const kiloAdapter = createKiloAdapter(this.options.kiloConfig, {
-      api_key: process.env.KILO_API_KEY,
-      organization_id: process.env.KILO_ORG_ID,
-      task_id: process.env.KILO_TASK_ID
-    });
+    let llmClient = null;
+    
+    // Check for LM Studio first (local)
+    if (process.env.LMSTUDIO_MODEL) {
+      console.log('🔧 Initializing LM Studio (local)...');
+      const { LMStudioAdapter, createLMStudioAdapter } = await import('./src/llm/adapters/lmstudio.js');
+      
+      const lmAdapter = createLMStudioAdapter({
+        model: process.env.LMSTUDIO_MODEL
+      });
+      
+      try {
+        await lmAdapter.initialize();
+        llmClient = new Client({
+          providers: { lmstudio: lmAdapter },
+          default_provider: 'lmstudio'
+        });
+        console.log('✅ LM Studio initialized successfully');
+      } catch (e) {
+        console.warn('⚠️  LM Studio not available:', e.message);
+      }
+    }
+    
+    // Fall back to Kilo if LM Studio not available
+    if (!llmClient && !process.env.KILO_API_KEY) {
+      throw new Error('No LLM configured. Set LMSTUDIO_MODEL or KILO_API_KEY in .env');
+    }
+    
+    if (!llmClient) {
+      // Validate Kilo API key
+      if (!process.env.KILO_API_KEY) {
+        throw new Error('KILO_API_KEY environment variable is required. Create a .env file with KILO_API_KEY and KILO_MODEL settings.');
+      }
 
-    // Create LLM client with Kilo adapter
-    const llmClient = new Client({
-      providers: { kilo: kiloAdapter },
-      default_provider: 'kilo'
-    });
+      // Create Kilo adapter with specified configuration
+      console.log(`🔧 Initializing Kilo Gateway (${this.options.kiloConfig} configuration)...`);
+      
+      const kiloAdapter = createKiloAdapter(this.options.kiloConfig, {
+        api_key: process.env.KILO_API_KEY,
+        organization_id: process.env.KILO_ORG_ID,
+        task_id: process.env.KILO_TASK_ID,
+        default_model: process.env.KILO_MODEL
+      });
 
-    await kiloAdapter.initialize();
+      // Create LLM client with Kilo adapter
+      llmClient = new Client({
+        providers: { kilo: kiloAdapter },
+        default_provider: 'kilo'
+      });
+
+      await kiloAdapter.initialize();
+    }
 
     // Create model router if enabled
     let modelRouter = null;
@@ -79,7 +143,7 @@ class KiloWorkflowRunner {
     this.llmClient = llmClient;
     this.modelRouter = modelRouter;
 
-    console.log('✅ Kilo integration initialized successfully');
+    console.log('✅ LLM initialized successfully');
     return this;
   }
 
@@ -127,7 +191,8 @@ class KiloWorkflowRunner {
   }
 
   async _createEnhancedAttractor(llmClient, modelRouter) {
-    const attractor = new Attractor({
+    // Use Attractor.create() to ensure all default handlers are registered
+    const attractor = await Attractor.create({
       llmClient,
       engine: {
         logsRoot: this.options.logsRoot,
@@ -142,7 +207,7 @@ class KiloWorkflowRunner {
     if (modelRouter) {
       const providerProfile = {
         id: 'kilo',
-        model: 'anthropic/claude-sonnet-4.5', // Will be overridden by router
+        model: process.env.KILO_MODEL || 'anthropic/claude-sonnet-4.5',
         buildSystemPrompt: async () => 'You are a helpful AI coding assistant working through Kilo Gateway.',
         tools: () => [],
         providerOptions: () => ({}),
@@ -196,15 +261,15 @@ class KiloWorkflowRunner {
       this._trackNodeExecution(nodeId, outcome, 'success');
     });
 
-    attractor.on('node_execution_failure', ({ nodeId, outcome }) => {
+    attractor.on('node_execution_failed', ({ nodeId, reason }) => {
       console.log(`❌ Failed: ${nodeId}`);
       this.workflowStats.failedNodes++;
       
-      if (outcome.failure_reason) {
-        console.log(`   Error: ${outcome.failure_reason}`);
+      if (reason) {
+        console.log(`   Error: ${reason}`);
       }
       
-      this._trackNodeExecution(nodeId, outcome, 'failure');
+      this._trackNodeExecution(nodeId, { failure_reason: reason }, 'failure');
     });
 
     attractor.on('edge_traversed', ({ from, to, label }) => {

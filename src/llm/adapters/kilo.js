@@ -161,7 +161,12 @@ export class KiloAdapter extends ProviderAdapter {
       return this._validateKiloModel(request.model);
     }
 
-    // Auto-select based on context hints or use default
+    // If default_model is set (via KILO_MODEL env), use it
+    if (this.default_model) {
+      return this._validateKiloModel(this.default_model);
+    }
+
+    // Auto-select based on context hints or use general strategy
     const contextHint = request.context_hint || 'general';
     return this.modelStrategies[contextHint] || this.default_model;
   }

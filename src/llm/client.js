@@ -21,7 +21,64 @@ export class Client {
     this.middleware = options.middleware || [];
   }
 
+  static async _loadEnvFile() {
+    // Only load if env vars aren't already set
+    if (process.env.KILO_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY) {
+      return;
+    }
+    
+    try {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const { fileURLToPath } = await import('url');
+      
+      // Try multiple locations for .env file
+      const envPaths = [
+        path.join(process.cwd(), '.env'),
+        path.join(process.cwd(), '..', '.env'),
+        path.resolve('.env')
+      ];
+      
+      for (const envPath of envPaths) {
+        try {
+          const content = await fs.readFile(envPath, 'utf-8');
+          const lines = content.split('\n');
+          
+          for (const line of lines) {
+            const trimmed = line.trim();
+            // Skip comments and empty lines
+            if (!trimmed || trimmed.startsWith('#')) continue;
+            
+            const eqIndex = trimmed.indexOf('=');
+            if (eqIndex > 0) {
+              const key = trimmed.slice(0, eqIndex).trim();
+              let value = trimmed.slice(eqIndex + 1).trim();
+              
+              // Remove quotes if present
+              if ((value.startsWith('"') && value.endsWith('"')) ||
+                  (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+              }
+              
+              // Only set if not already defined
+              if (!process.env[key]) {
+                process.env[key] = value;
+              }
+            }
+          }
+        } catch {
+          // File doesn't exist, try next path
+        }
+      }
+    } catch (error) {
+      // Silently ignore - .env loading is optional
+    }
+  }
+
   static async fromEnv() {
+    // Load .env file if present
+    await this._loadEnvFile();
+    
     const providers = {};
     let defaultProvider = null;
 
@@ -46,18 +103,36 @@ export class Client {
       try {
         const { KiloAdapter, createKiloAdapter } = await import('./adapters/kilo.js');
         
-        // Use balanced configuration by default, or user-specified config
+        // Use, or user-specified balanced configuration by default config
         const config = process.env.KILO_CONFIG || 'balanced';
         providers.kilo = createKiloAdapter(config, {
           api_key: process.env.KILO_API_KEY,
           organization_id: process.env.KILO_ORG_ID,
-          task_id: process.env.KILO_TASK_ID
+          task_id: process.env.KILO_TASK_ID,
+          default_model: process.env.KILO_MODEL || undefined
         });
         
         // Kilo gets highest priority since it provides access to multiple providers
         defaultProvider = 'kilo';
       } catch (error) {
         console.warn('Kilo adapter failed to load:', error.message);
+      }
+    }
+
+    // Check for LM Studio (local LLM)
+    if (process.env.LMSTUDIO_API_KEY !== undefined || process.env.LMSTUDIO_MODEL) {
+      try {
+        const { LMStudioAdapter, createLMStudioAdapter } = await import('./adapters/lmstudio.js');
+        
+        providers.lmstudio = createLMStudioAdapter({
+          base_url: process.env.LMSTUDIO_BASE_URL || 'http://172.24.144.1:1234/v1',
+          model: process.env.LMSTUDIO_MODEL || 'local-model',
+          api_key: process.env.LMSTUDIO_API_KEY || 'lm-studio'
+        });
+        
+        if (!defaultProvider) defaultProvider = 'lmstudio';
+      } catch (error) {
+        console.warn('LM Studio adapter failed to load:', error.message);
       }
     }
 

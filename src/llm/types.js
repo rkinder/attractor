@@ -191,11 +191,16 @@ export class Response {
   }
 
   get text() {
-    return this.message ? this.message.text : '';
+    if (!this.message) return '';
+    if (typeof this.message === 'string') return this.message;
+    if (typeof this.message.text === 'string') return this.message.text;
+    return '';
   }
 
   get tool_calls() {
     if (!this.message) return [];
+    // Handle case where message.content is a string or plain object (not an array of parts)
+    if (typeof this.message.content === 'string' || !Array.isArray(this.message.content)) return [];
     return this.message.content
       .filter(part => part.kind === ContentKind.TOOL_CALL)
       .map(part => part.tool_call);
@@ -203,6 +208,8 @@ export class Response {
 
   get reasoning() {
     if (!this.message) return null;
+    // Handle case where message.content is a string or plain object (not an array of parts)
+    if (typeof this.message.content === 'string' || !Array.isArray(this.message.content)) return null;
     return this.message.content
       .filter(part => part.kind === ContentKind.THINKING)
       .map(part => part.thinking.text)
