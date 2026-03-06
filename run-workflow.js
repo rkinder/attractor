@@ -55,16 +55,13 @@ async function main() {
     
     attractor.on('node_execution_success', ({ nodeId, outcome }) => {
         console.log(`✅ Completed: ${nodeId}`);
-        if (outcome.message) {
-            console.log(`   ${outcome.message}`);
+        if (outcome.notes) {
+            console.log(`   ${outcome.notes}`);
         }
     });
     
-    attractor.on('human_input_required', ({ nodeId, message }) => {
-        console.log(`\n👤 Human input required at: ${nodeId}`);
-        console.log(`   ${message}`);
-        console.log('   Press [A] to approve, [R] to request changes, [S] to skip');
-    });
+    // Note: human_input_required is not emitted by the engine
+    // Human gates use wait.human handler with ConsoleInterviewer
     
     attractor.on('pipeline_complete', ({ result }) => {
         console.log(`\n🎉 Workflow completed successfully!`);
