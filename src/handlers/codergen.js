@@ -205,7 +205,7 @@ export class SessionBackend extends CodergenBackend {
     }
 
     // Use the coding agent session to process the prompt
-    const result = await this.session.processInput(prompt);
+    await this.session.processInput(prompt);
     
     // Extract the final response text
     const lastAssistantTurn = this.session.history
