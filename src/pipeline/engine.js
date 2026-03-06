@@ -132,6 +132,30 @@ export class PipelineEngine extends EventEmitter {
         await this._saveCheckpoint(checkpoint, logsDir);
       }
       
+      // Check if this was a parallel node - if so, handle post-parallel execution
+      if (currentNode.shape === 'component' || currentNode.type === 'parallel') {
+        // Parallel handler already executed all branches
+        // Mark all branch nodes as completed and find the consolidation node
+        const parallelOutgoing = graph.getOutgoingEdges(currentNode.id);
+        for (const edge of parallelOutgoing) {
+          if (!completedNodes.includes(edge.to)) {
+            completedNodes.push(edge.to);
+          }
+        }
+        
+        // Find consolidation node (node with incoming edges from parallel branches)
+        const consolidationNode = this._findConsolidationNode(currentNode.id, parallelOutgoing.map(e => e.to), graph);
+        if (consolidationNode) {
+          currentNode = consolidationNode;
+          this.emit('edge_traversed', { 
+            from: currentNode.id, 
+            to: currentNode.id, 
+            edge: null 
+          });
+          continue;
+        }
+      }
+      
       // Select next edge
       const nextEdge = this._selectEdge(currentNode, outcome, context, graph);
       
@@ -468,6 +492,25 @@ export class PipelineEngine extends EventEmitter {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const random = Math.random().toString(36).substr(2, 8);
     return `run-${timestamp}-${random}`;
+  }
+  
+  _findConsolidationNode(parallelNodeId, branchNodeIds, graph) {
+    // Find a node that has incoming edges from the parallel branches
+    // This is typically a fanin node (tripleoctagon) or a convergence point
+    const allNodes = [...graph.nodes.values()];
+    
+    for (const node of allNodes) {
+      const incoming = graph.getIncomingEdges(node.id);
+      const incomingSources = incoming.map(e => e.from);
+      
+      // Check if this node receives from all or most of the parallel branches
+      const branchInputs = incomingSources.filter(id => branchNodeIds.includes(id));
+      if (branchInputs.length > 0) {
+        return node;
+      }
+    }
+    
+    return null;
   }
 
   _resetRetryCounter(nodeId, context) {

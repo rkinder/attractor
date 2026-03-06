@@ -209,11 +209,17 @@ export class ParallelHandler extends Handler {
     
     // Store individual branch outputs in context
     results.forEach((result, index) => {
+      const nodeId = edges[index].to;
       if (result.context_updates) {
         for (const [key, value] of Object.entries(result.context_updates)) {
           if (key.startsWith('last_response') || key.startsWith('output')) {
-            // Store branch-specific outputs
-            contextUpdates[`parallel.branches.${edges[index].to}.${key}`] = value;
+            // Store branch-specific outputs (for reference)
+            contextUpdates[`parallel.branches.${nodeId}.${key}`] = value;
+            
+            // Also store in format expected by FanInHandler: <nodeId>.output
+            if (key === 'last_response') {
+              contextUpdates[`${nodeId}.output`] = value;
+            }
           }
         }
       }

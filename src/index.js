@@ -148,22 +148,39 @@ export class Attractor {
     await attractor._setupDefaultHandlers();
     
     // Initialize LLM client if not provided
+    let llmClient = null;
     if (!options.llmClient) {
       const { Client } = await import('./llm/client.js');
-      attractor.llmClient = await Client.fromEnv();
+      const client = await Client.fromEnv();
+      // Only use client if it has valid providers
+      if (client.providers && Object.keys(client.providers).length > 0) {
+        llmClient = client;
+      }
     } else {
-      attractor.llmClient = options.llmClient;
+      llmClient = options.llmClient;
     }
     
-    // Setup codergen handler with LLM backend if not provided
-    if (!attractor.handlerRegistry.has('codergen')) {
-      const { CodergenHandler, SessionBackend } = await import('./handlers/codergen.js');
+    attractor.llmClient = llmClient;
+    
+    // Setup codergen handler with LLM backend
+    // Use simulation mode if no valid client is available
+    const { CodergenHandler, SessionBackend } = await import('./handlers/codergen.js');
+    
+    if (llmClient) {
       const { Session, SessionConfig } = await import('./agent/session.js');
       
-      // Create a simple provider profile for demonstration
+      // Get the default model from the LLM client if available
+      let defaultModel = 'claude-sonnet-4.5';
+      const providerName = llmClient.default_provider;
+      if (providerName && llmClient.providers?.[providerName]?.default_model) {
+        defaultModel = llmClient.providers[providerName].default_model;
+      }
+      
+      // Create provider profile based on available client
+      const providerId = providerName || 'anthropic';
       const providerProfile = {
-        id: 'anthropic',
-        model: 'claude-opus-4-6',
+        id: providerId,
+        model: defaultModel,
         buildSystemPrompt: async () => 'You are a helpful coding assistant.',
         tools: () => [],
         providerOptions: () => ({}),
@@ -180,11 +197,14 @@ export class Attractor {
         providerProfile,
         executionEnv,
         new SessionConfig(),
-        attractor.llmClient
+        llmClient
       );
       
       const backend = new SessionBackend(session);
       attractor.handlerRegistry.register('codergen', new CodergenHandler(backend));
+    } else {
+      // No LLM client - use simulation mode
+      attractor.handlerRegistry.register('codergen', new CodergenHandler(null));
     }
     
     return attractor;
@@ -196,6 +216,7 @@ export class Attractor {
     const { WaitForHumanHandler } = await import('./handlers/human.js');
     const { ToolHandler } = await import('./handlers/tool.js');
     const { ParallelHandler } = await import('./handlers/parallel.js');
+    const { FanInHandler } = await import('./handlers/fanin.js');
     const { StackManagerLoopHandler } = await import('./handlers/stack-manager-loop.js');
     const { MCPHandler } = await import('./handlers/mcp.js');
     const { MCPClient } = await import('./mcp/client.js');
@@ -210,6 +231,7 @@ export class Attractor {
     this.handlerRegistry.register('wait.human', new WaitForHumanHandler());
     this.handlerRegistry.register('tool', new ToolHandler());
     this.handlerRegistry.register('parallel', new ParallelHandler(this.handlerRegistry));
+    this.handlerRegistry.register('parallel.fan_in', new FanInHandler());
     this.handlerRegistry.register('stack.manager_loop', new StackManagerLoopHandler());
     this.handlerRegistry.register('mcp', new MCPHandler(mcpClient));
     
