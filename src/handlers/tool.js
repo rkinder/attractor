@@ -7,6 +7,7 @@
  * - Error handling for timeouts and execution failures
  * - Context updates with tool output
  * - Required log files: command.txt, stdout.txt, stderr.txt, exit-code.txt, error.txt, outcome.json
+ * - Security: Optional whitelist/blacklist validation via CommandValidator
  */
 
 import fs from 'fs/promises';
@@ -15,10 +16,32 @@ import { Handler } from './registry.js';
 import { Outcome } from '../pipeline/outcome.js';
 import { promisify } from 'util';
 import { exec as childExec } from 'child_process';
+import { CommandValidator, DEFAULT_ALLOWED_COMMANDS, DEFAULT_BLOCKED_PATTERNS } from './command-validator.js';
 
 const exec = promisify(childExec);
 
 export class ToolHandler extends Handler {
+  constructor(config = {}) {
+    super();
+    this.validator = config.validator || null;
+    
+    // Auto-create validator if security mode is configured
+    if (!this.validator && process.env.TOOL_HANDLER_SECURITY_MODE) {
+      const whitelist = process.env.TOOL_HANDLER_ALLOWED_COMMANDS 
+        ? process.env.TOOL_HANDLER_ALLOWED_COMMANDS.split(',').map(c => c.trim())
+        : DEFAULT_ALLOWED_COMMANDS;
+        
+      const blacklist = process.env.TOOL_HANDLER_BLOCKED_COMMANDS
+        ? process.env.TOOL_HANDLER_BLOCKED_COMMANDS.split(',').map(c => c.trim())
+        : DEFAULT_BLOCKED_PATTERNS;
+        
+      this.validator = new CommandValidator({
+        mode: process.env.TOOL_HANDLER_SECURITY_MODE,
+        whitelist,
+        blacklist
+      });
+    }
+  }
   /**
    * Execute external shell command
    * @param {Object} node - Pipeline node with tool_command attribute
@@ -32,7 +55,6 @@ export class ToolHandler extends Handler {
     const toolCommand = node.attributes?.tool_command || node.attrs?.tool_command;
     if (!toolCommand) {
       const outcome = Outcome.fail('No tool_command specified');
-      // Create stage directory for logging even on validation failure
       const stageDir = path.join(logsRoot, node.id);
       await fs.mkdir(stageDir, { recursive: true });
       await this._writeLogFiles(stageDir, {
@@ -44,6 +66,25 @@ export class ToolHandler extends Handler {
         outcome: outcome
       });
       return outcome;
+    }
+
+    // 1.5 Security validation
+    if (this.validator && this.validator.isEnabled()) {
+      const validation = this.validator.validate(toolCommand);
+      if (!validation.valid) {
+        const outcome = Outcome.fail(`Security validation failed: ${validation.reason}`);
+        const stageDir = path.join(logsRoot, node.id);
+        await fs.mkdir(stageDir, { recursive: true });
+        await this._writeLogFiles(stageDir, {
+          command: toolCommand,
+          stdout: '',
+          stderr: '',
+          exitCode: -1,
+          error: validation.reason,
+          outcome: outcome
+        });
+        return outcome;
+      }
     }
 
     // 2. Extract timeout with default of 30000ms
