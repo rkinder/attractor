@@ -7,8 +7,8 @@
 **Description**: Ensure `$goal` is expanded in CodergenHandler (already works).
 
 **Acceptance Criteria**:
-- [ ] Verify `$goal` expands to graph's goal attribute
-- [ ] Works when goal is empty string
+- [x] Verify `$goal` expands to graph's goal attribute
+- [x] Works when goal is empty string
 
 ---
 
@@ -17,9 +17,9 @@
 **Description**: Add support for `$last_response` in CodergenHandler.
 
 **Acceptance Criteria**:
-- [ ] Expand `$last_response` to value from `context.get('last_response')`
-- [ ] Replace with empty string if not set
-- [ ] Test with workflow that has sequential codergen nodes
+- [x] Expand `$last_response` to value from `context.get('last_response')`
+- [x] Replace with empty string if not set
+- [x] Test with workflow that has sequential codergen nodes
 
 ---
 
@@ -28,9 +28,9 @@
 **Description**: Add support for `$current_node` in CodergenHandler.
 
 **Acceptance Criteria**:
-- [ ] Expand `$current_node` to current node's ID
-- [ ] Value comes from `context.get(Context.CURRENT_NODE)`
-- [ ] Test: prompt="Process this in $current_node"
+- [x] Expand `$current_node` to current node's ID
+- [x] Value comes from `context.get(Context.CURRENT_NODE)`
+- [x] Test: prompt="Process this in $current_node"
 
 ---
 
@@ -39,9 +39,9 @@
 **Description**: Add support for arbitrary context key expansion.
 
 **Acceptance Criteria**:
-- [ ] Expand `$context.<key>` to `context.get('<key>')`
-- [ ] Support nested keys: `$context.parallel.success_count`
-- [ ] Replace with empty string if key doesn't exist
+- [x] Expand `$context.<key>` to `context.get('<key>')`
+- [x] Support nested keys: `$context.parallel.success_count`
+- [x] Replace with empty string if key doesn't exist
 
 ---
 
@@ -50,9 +50,9 @@
 **Description**: Support referencing output from specific nodes.
 
 **Acceptance Criteria**:
-- [ ] Expand `$<nodeId>.output` to that node's output in context
-- [ ] Match pattern: `$` + node ID + `.output`
-- [ ] Works for any previous node's output
+- [x] Expand `$<nodeId>.output` to that node's output in context
+- [x] Match pattern: `$` + node ID + `.output`
+- [x] Works for any previous node's output
 
 ---
 
@@ -61,9 +61,9 @@
 **Description**: Gracefully handle missing variables.
 
 **Acceptance Criteria**:
-- [ ] Replace undefined variables with empty string (not crash)
-- [ ] Optionally log warning for undefined variables
-- [ ] No errors thrown during expansion
+- [x] Replace undefined variables with empty string (not crash)
+- [x] Optionally log warning for undefined variables
+- [x] No errors thrown during expansion
 
 ---
 
@@ -108,17 +108,17 @@
 | Requirement | CodergenHandler | FanInHandler | Other Handlers |
 |-------------|-----------------|--------------|----------------|
 | REQ-VAR-001 | ✅ Exists | ✅ Exists | N/A |
-| REQ-VAR-002 | ❌ Add | ✅ Exists | N/A |
-| REQ-VAR-003 | ❌ Add | ❌ Add | N/A |
-| REQ-VAR-004 | ❌ Add | ✅ Partial | N/A |
-| REQ-VAR-005 | ❌ Add | ✅ Exists | N/A |
-| REQ-VAR-006 | ❌ Add | ✅ Exists | N/A |
+| REQ-VAR-002 | ✅ Implemented | ✅ Exists | N/A |
+| REQ-VAR-003 | ✅ Implemented | ❌ Add | N/A |
+| REQ-VAR-004 | ✅ Implemented | ✅ Partial | N/A |
+| REQ-VAR-005 | ✅ Implemented | ✅ Exists | N/A |
+| REQ-VAR-006 | ✅ Implemented | ✅ Exists | N/A |
 
 ---
 
 ## Definition of Done
 
-- [ ] All 6 requirements implemented in CodergenHandler
+- [x] All 6 requirements implemented in CodergenHandler
 - [ ] All test cases pass
 - [ ] Documentation updated
 - [ ] No performance regression in LLM calls

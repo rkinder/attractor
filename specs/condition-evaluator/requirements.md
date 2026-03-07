@@ -7,10 +7,10 @@
 **Description**: Implement safe expression parser to replace eval().
 
 **Acceptance Criteria**:
-- [ ] Remove eval() from `_evaluateCondition()`
-- [ ] Implement recursive descent parser
-- [ ] Parse expressions without executing arbitrary code
-- [ ] Return boolean result
+- [x] Remove eval() from `_evaluateCondition()`
+- [x] Implement recursive descent parser
+- [x] Parse expressions without executing arbitrary code
+- [x] Return boolean result
 
 ---
 
@@ -19,10 +19,10 @@
 **Description**: Support all comparison operators.
 
 **Acceptance Criteria**:
-- [ ] Support `=` (equals) - convert to ===
-- [ ] Support `!=` (not equals)
-- [ ] Support `>`, `<`, `>=`, `<=` (numeric comparison)
-- [ ] Test: `score > 0.8` evaluates correctly
+- [x] Support `=` (equals) - convert to ===
+- [x] Support `!=` (not equals)
+- [x] Support `>`, `<`, `>=`, `<=` (numeric comparison)
+- [x] Test: `score > 0.8` evaluates correctly
 
 ---
 
@@ -31,10 +31,10 @@
 **Description**: Support AND/OR in conditions.
 
 **Acceptance Criteria**:
-- [ ] Support `AND` and `&&`
-- [ ] Support `OR` and `||`
-- [ ] Support parentheses for grouping
-- [ ] Test: `outcome=success AND confidence>0.8`
+- [x] Support `AND` and `&&`
+- [x] Support `OR` and `||`
+- [x] Support parentheses for grouping
+- [x] Test: `outcome=success AND confidence>0.8`
 
 ---
 
@@ -43,10 +43,10 @@
 **Description**: Replace context variables before evaluation.
 
 **Acceptance Criteria**:
-- [ ] Replace `outcome` with actual outcome value
-- [ ] Replace `context.<key>` with context value
-- [ ] Replace bare `<key>` with context value (backward compat)
-- [ ] Quote string values properly
+- [x] Replace `outcome` with actual outcome value
+- [x] Replace `context.<key>` with context value
+- [x] Replace bare `<key>` with context value (backward compat)
+- [x] Quote string values properly
 
 ---
 
@@ -55,11 +55,11 @@
 **Description**: Handle evaluation errors gracefully.
 
 **Acceptance Criteria**:
-- [ ] Catch parse errors
-- [ ] Catch evaluation errors
-- [ ] Return false on error
-- [ ] Log warning with error details
-- [ ] Do not throw exceptions
+- [x] Catch parse errors
+- [x] Catch evaluation errors
+- [x] Return false on error
+- [x] Log warning with error details
+- [x] Do not throw exceptions
 
 ---
 
@@ -105,7 +105,7 @@
 
 ## Definition of Done
 
-- [ ] eval() removed from _evaluateCondition()
-- [ ] All test cases pass
-- [ ] No security vulnerabilities
-- [ ] Backward compatible with existing conditions
+- [x] eval() removed from _evaluateCondition()
+- [x] All test cases pass
+- [x] No security vulnerabilities
+- [x] Backward compatible with existing conditions

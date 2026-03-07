@@ -7,10 +7,10 @@
 **Description**: Create AttractorError base class.
 
 **Acceptance Criteria**:
-- [ ] Extends Error
-- [ ] Has `code` property
-- [ ] Has `details` property (optional)
-- [ ] Has proper stack trace
+- [x] Extends Error
+- [x] Has `code` property
+- [x] Has `details` property (optional)
+- [x] Has proper stack trace
 
 ---
 
@@ -19,9 +19,9 @@
 **Description**: Create ValidationError for validation failures.
 
 **Acceptance Criteria**:
-- [ ] Extends AttractorError
-- [ ] Code: 'VALIDATION_ERROR'
-- [ ] Used by PipelineLinter
+- [x] Extends AttractorError
+- [x] Code: 'VALIDATION_ERROR'
+- [x] Used by PipelineLinter
 
 ---
 
@@ -30,9 +30,9 @@
 **Description**: Create ExecutionError for node execution failures.
 
 **Acceptance Criteria**:
-- [ ] Extends AttractorError
-- [ ] Code: 'EXECUTION_ERROR'
-- [ ] Has optional `nodeId` property
+- [x] Extends AttractorError
+- [x] Code: 'EXECUTION_ERROR'
+- [x] Has optional `nodeId` property
 
 ---
 
@@ -41,9 +41,9 @@
 **Description**: Create ProviderError for LLM provider failures.
 
 **Acceptance Criteria**:
-- [ ] Extends AttractorError
-- [ ] Code: 'PROVIDER_ERROR'
-- [ ] Has optional `provider` property
+- [x] Extends AttractorError
+- [x] Code: 'PROVIDER_ERROR'
+- [x] Has optional `provider` property
 
 ---
 
@@ -52,9 +52,9 @@
 **Description**: Create TimeoutError for timeout failures.
 
 **Acceptance Criteria**:
-- [ ] Extends AttractorError
-- [ ] Code: 'TIMEOUT_ERROR'
-- [ ] Has optional `timeout` property (ms)
+- [x] Extends AttractorError
+- [x] Code: 'TIMEOUT_ERROR'
+- [x] Has optional `timeout` property (ms)
 
 ---
 
@@ -63,8 +63,8 @@
 **Description**: Create CheckpointError for checkpoint failures.
 
 **Acceptance Criteria**:
-- [ ] Extends AttractorError
-- [ ] Code: 'CHECKPOINT_ERROR'
+- [x] Extends AttractorError
+- [x] Code: 'CHECKPOINT_ERROR'
 
 ---
 
@@ -73,8 +73,8 @@
 **Description**: Export all errors from main index.
 
 **Acceptance Criteria**:
-- [ ] Export from src/index.js
-- [ ] Verify: `import { ValidationError } from 'attractor'`
+- [x] Export from src/index.js
+- [x] Verify: `import { ValidationError } from 'attractor'`
 
 ---
 
@@ -83,11 +83,15 @@
 ```
 Error
   └── AttractorError
-        ├── ValidationError (code: 'VALIDATION_ERROR')
-        ├── ExecutionError (code: 'EXECUTION_ERROR', nodeId?)
+        ├── ValidationError (code: 'VALIDATION_ERROR', field?)
+        ├── WorkflowError (code: 'WORKFLOW_ERROR', workflow?, nodeId?)
+        ├── ExecutionError (code: 'EXECUTION_ERROR', nodeId?, handler?)
+        ├── HandlerError (code: 'HANDLER_ERROR', handler?, nodeId?)
+        ├── LLMError (code: 'LLM_ERROR', provider?, model?, statusCode?)
         ├── ProviderError (code: 'PROVIDER_ERROR', provider?)
-        ├── TimeoutError (code: 'TIMEOUT_ERROR', timeout?)
-        └── CheckpointError (code: 'CHECKPOINT_ERROR')
+        ├── TimeoutError (code: 'TIMEOUT_ERROR', timeout?, operation?)
+        ├── CheckpointError (code: 'CHECKPOINT_ERROR', runId?)
+        └── ConfigurationError (code: 'CONFIGURATION_ERROR', configKey?)
 ```
 
 ---
@@ -112,7 +116,7 @@ Error
 
 ## Definition of Done
 
-- [ ] All 6 error classes implemented
-- [ ] Exported from index.js
-- [ ] Used in appropriate places (or as replacement)
-- [ ] Test cases pass
+- [x] All error classes implemented
+- [x] Exported from index.js
+- [x] Used in appropriate places (or as replacement)
+- [x] Test cases pass

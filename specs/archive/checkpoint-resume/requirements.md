@@ -7,11 +7,11 @@
 **Description**: Add resume method to PipelineEngine.
 
 **Acceptance Criteria**:
-- [ ] Add `async resume(runId, options)` method to PipelineEngine
-- [ ] Load checkpoint from `logsRoot/runId/checkpoint.json`
-- [ ] Reconstruct context from checkpoint
-- [ ] Continue execution from saved node
-- [ ] Return final result
+- [x] Add `async resume(runId, options)` method to PipelineEngine
+- [x] Load checkpoint from `logsRoot/runId/checkpoint.json`
+- [x] Reconstruct context from checkpoint
+- [x] Continue execution from saved node
+- [x] Return final result
 
 ---
 
@@ -20,9 +20,9 @@
 **Description**: Expose resume through Attractor class.
 
 **Acceptance Criteria**:
-- [ ] Add `attractor.resume(runId, options)` method
-- [ ] Delegate to engine.resume()
-- [ ] Support same options as run()
+- [x] Add `attractor.resume(runId, options)` method
+- [x] Delegate to engine.resume()
+- [x] Support same options as run()
 
 ---
 
@@ -31,9 +31,9 @@
 **Description**: List available checkpoints.
 
 **Acceptance Criteria**:
-- [ ] Add `listCheckpoints(logsRoot)` static method
-- [ ] Return array of run IDs with checkpoints
-- [ ] Include checkpoint timestamp and completed nodes
+- [x] Add `listCheckpoints(logsRoot)` static method
+- [x] Return array of run IDs with checkpoints
+- [x] Include checkpoint timestamp and completed nodes
 
 ---
 
@@ -42,10 +42,10 @@
 **Description**: Validate checkpoint before resume.
 
 **Acceptance Criteria**:
-- [ ] Verify checkpoint JSON is valid
-- [ ] Verify required fields: timestamp, current_node, completed_nodes, context_values
-- [ ] Return false/incomplete if invalid
-- [ ] Throw descriptive error on resume with invalid checkpoint
+- [x] Verify checkpoint JSON is valid
+- [x] Verify required fields: timestamp, current_node, completed_nodes, context_values
+- [x] Return false/incomplete if invalid
+- [x] Throw descriptive error on resume with invalid checkpoint
 
 ---
 
@@ -107,8 +107,8 @@ async resume(runId: string, options?: {
 
 ## Definition of Done
 
-- [ ] Resume method implemented on PipelineEngine
-- [ ] Resume exposed on Attractor
-- [ ] Checkpoint discovery works
-- [ ] Validation prevents crashes
-- [ ] Test cases pass
+- [x] Resume method implemented on PipelineEngine
+- [x] Resume exposed on Attractor
+- [x] Checkpoint discovery works
+- [x] Validation prevents crashes
+- [x] Test cases pass

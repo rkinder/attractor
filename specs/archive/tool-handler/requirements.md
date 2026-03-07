@@ -244,6 +244,8 @@ export class ToolHandler extends Handler {
 - **Path Access**: Commands run with same permissions as Node.js process
 - **Environment**: Inherits process.env from parent (no isolation)
 
+> **Note:** Security enhancements (whitelist/blacklist/sandbox) are documented in `specs/tool-handler-security/` as a future enhancement. Current implementation is suitable for trusted environments only.
+
 ### Compatibility
 - **Node.js Version**: Requires Node.js 14+ for `fs/promises` support
 - **Platform Support**: Must work on Linux, macOS, Windows
