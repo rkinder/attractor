@@ -61,6 +61,21 @@ export {
   StageStatus
 } from './pipeline/outcome.js';
 
+export { OutputExtractor } from './pipeline/output-extractor.js';
+
+export {
+  AttractorError,
+  ValidationError,
+  WorkflowError,
+  ExecutionError,
+  LLMError,
+  ProviderError,
+  TimeoutError,
+  CheckpointError,
+  HandlerError,
+  ConfigurationError
+} from './pipeline/errors.js';
+
 export { PipelineEngine } from './pipeline/engine.js';
 
 export { 
@@ -86,6 +101,12 @@ export { WaitForHumanHandler } from './handlers/human.js';
 export {
   ToolHandler
 } from './handlers/tool.js';
+
+export {
+  CommandValidator,
+  DEFAULT_ALLOWED_COMMANDS,
+  DEFAULT_BLOCKED_PATTERNS
+} from './handlers/command-validator.js';
 
 export {
   ParallelHandler
@@ -242,6 +263,16 @@ export class Attractor {
     this.handlerRegistry.setDefault(new CodergenHandler());
   }
 
+  async runFromString(dotText, options = {}) {
+    try {
+      return await this.engine.runFromString(dotText, options);
+    } finally {
+      if (this.mcpClient) {
+        await this.mcpClient.cleanup();
+      }
+    }
+  }
+
   async run(dotFilePath, options = {}) {
     try {
       return await this.engine.run(dotFilePath, options);
@@ -251,6 +282,21 @@ export class Attractor {
         await this.mcpClient.cleanup();
       }
     }
+  }
+
+  async resume(runId, options = {}) {
+    try {
+      return await this.engine.resume(runId, options);
+    } finally {
+      if (this.mcpClient) {
+        await this.mcpClient.cleanup();
+      }
+    }
+  }
+
+  static async listCheckpoints(options = {}) {
+    const logsRoot = options.logsRoot || './logs';
+    return await PipelineEngine.listCheckpoints(logsRoot);
   }
 
   on(event, listener) {
