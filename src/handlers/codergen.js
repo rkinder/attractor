@@ -100,11 +100,61 @@ export class CodergenHandler extends Handler {
   }
 
   _expandVariables(text, graph, context) {
-    // Simple variable expansion for $goal
+    if (!text) return text;
+    
+    let expanded = text;
+    
+    expanded = this._expandGoal(expanded, graph);
+    expanded = this._expandLastResponse(expanded, context);
+    expanded = this._expandCurrentNode(expanded, context);
+    expanded = this._expandContextKey(expanded, context);
+    expanded = this._expandNodeOutput(expanded, context);
+    expanded = this._expandEnvVar(expanded);
+    
+    return expanded;
+  }
+
+  _expandEnvVar(text) {
+    const pattern = /\$env\.([a-zA-Z_][a-zA-Z0-9_]*)/g;
+    return text.replace(pattern, (match, key) => {
+      const value = process.env[key];
+      return value !== undefined ? value : '';
+    });
+  }
+
+  _expandGoal(text, graph) {
     return text.replace(/\$goal/g, graph.goal || '');
   }
 
+  _expandLastResponse(text, context) {
+    const lastResponse = context.get(Context.LAST_RESPONSE, '');
+    return text.replace(/\$last_response/g, this._truncate(lastResponse, 200));
+  }
+
+  _expandCurrentNode(text, context) {
+    const currentNode = context.get(Context.CURRENT_NODE, '');
+    return text.replace(/\$current_node/g, currentNode);
+  }
+
+  _expandContextKey(text, context) {
+    const pattern = /\$context\.([a-zA-Z_][a-zA-Z0-9_.]*)/g;
+    return text.replace(pattern, (match, key) => {
+      const value = context.get(key, '');
+      return value !== null ? String(value) : '';
+    });
+  }
+
+  _expandNodeOutput(text, context) {
+    const pattern = /\$([a-zA-Z_][a-zA-Z0-9_-]*)\.output/g;
+    return text.replace(pattern, (match, nodeId) => {
+      const key = `${nodeId}.output`;
+      const value = context.get(key, '');
+      return value !== null ? String(value) : '';
+    });
+  }
+
   _truncate(text, maxLength) {
+    if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength - 3) + '...';
   }

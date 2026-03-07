@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import { Context } from './context.js';
 import { Outcome, StageStatus } from './outcome.js';
 import { DOTParser } from './parser.js';
+import { ConditionEvaluator } from './condition-evaluator.js';
 import { PipelineLinter } from '../validation/linter.js';
 import { ModelStylesheet, StylesheetApplicator } from '../styling/stylesheet.js';
 import { DirectoryWorkflowLoader } from '../workflow/directory-loader.js';
@@ -26,6 +27,45 @@ export class PipelineEngine extends EventEmitter {
     };
     this.linter = new PipelineLinter({ handlerRegistry });
     this.stylesheetApplicator = null;
+    this.conditionEvaluator = new ConditionEvaluator();
+  }
+
+  async runFromString(dotText, options = {}) {
+    const runId = options.runId || this._generateRunId();
+    const logsDir = path.join(this.config.logsRoot, runId);
+    
+    await fs.mkdir(logsDir, { recursive: true });
+    
+    try {
+      this.emit('pipeline_start', { runId, dotFilePath: '<string>', logsDir });
+      
+      const parser = new DOTParser();
+      const graph = parser.parse(dotText);
+      
+      this._validateGraph(graph);
+      
+      if (this.config.enableStylesheet && graph.modelStylesheet) {
+        const stylesheet = new ModelStylesheet(graph.modelStylesheet);
+        this.stylesheetApplicator = new StylesheetApplicator(stylesheet);
+        this.emit('stylesheet_loaded', { stylesheet: graph.modelStylesheet });
+      }
+      
+      const context = this._initializeContext(graph);
+      let checkpoint = this._createCheckpoint(context, null, []);
+      
+      if (this.config.enableCheckpointing) {
+        await this._saveCheckpoint(checkpoint, logsDir);
+      }
+      
+      const result = await this._executeGraph(graph, context, logsDir);
+      
+      this.emit('pipeline_complete', { runId, result });
+      return result;
+      
+    } catch (error) {
+      this.emit('pipeline_error', { runId, error });
+      throw error;
+    }
   }
 
   async run(dotFilePath, options = {}) {
@@ -353,25 +393,13 @@ export class PipelineEngine extends EventEmitter {
   }
 
   _evaluateCondition(condition, outcome, context) {
-    // Simple condition evaluator - in production would use a proper expression parser
     try {
-      // Replace context variables
-      let expr = condition
-        .replace(/\boutcome\b/g, `"${outcome.status}"`)
-        .replace(/\bcontext\.(\w+)/g, (match, key) => {
-          const value = context.get(key);
-          return typeof value === 'string' ? `"${value}"` : String(value);
-        });
+      const contextValues = {
+        outcome: outcome.status,
+        ...context.snapshot()
+      };
       
-      // Basic operators
-      expr = expr
-        .replace(/\s*=\s*/g, ' === ')
-        .replace(/\s*!=\s*/g, ' !== ')
-        .replace(/\s+and\s+/gi, ' && ')
-        .replace(/\s+or\s+/gi, ' || ');
-      
-      // Evaluate safely (in production, use a proper expression evaluator)
-      return eval(expr);
+      return this.conditionEvaluator.evaluate(condition, contextValues);
     } catch (error) {
       this.emit('condition_error', { condition, error: error.message });
       return false;
@@ -486,6 +514,221 @@ export class PipelineEngine extends EventEmitter {
   async _saveCheckpoint(checkpoint, logsDir) {
     const checkpointPath = path.join(logsDir, 'checkpoint.json');
     await fs.writeFile(checkpointPath, JSON.stringify(checkpoint, null, 2));
+  }
+
+  async loadCheckpoint(runId) {
+    const logsDir = path.join(this.config.logsRoot, runId);
+    const checkpointPath = path.join(logsDir, 'checkpoint.json');
+    
+    try {
+      const content = await fs.readFile(checkpointPath, 'utf-8');
+      const checkpoint = JSON.parse(content);
+      
+      if (!this._validateCheckpoint(checkpoint)) {
+        throw new Error('Invalid checkpoint structure');
+      }
+      
+      return checkpoint;
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`No checkpoint found for run ID: ${runId}`);
+      }
+      throw error;
+    }
+  }
+
+  _validateCheckpoint(checkpoint) {
+    if (!checkpoint) return false;
+    if (!checkpoint.timestamp) return false;
+    if (!checkpoint.current_node) return false;
+    if (!Array.isArray(checkpoint.completed_nodes)) return false;
+    if (!checkpoint.context_values) return false;
+    return true;
+  }
+
+  _restoreContext(contextValues, logs) {
+    const context = new Context();
+    if (contextValues) {
+      for (const [key, value] of Object.entries(contextValues)) {
+        context.set(key, value);
+      }
+    }
+    if (logs) {
+      context.logs = [...logs];
+    }
+    return context;
+  }
+
+  async resume(runId, options = {}) {
+    const logsDir = path.join(this.config.logsRoot, runId);
+    const checkpoint = await this.loadCheckpoint(runId);
+    
+    const dotFilePath = options.dotFilePath || checkpoint.dotFilePath;
+    if (!dotFilePath) {
+      throw new Error('Cannot resume: no DOT file path provided or found in checkpoint');
+    }
+    
+    try {
+      this.emit('pipeline_resume', { runId, checkpoint: checkpoint.timestamp });
+      
+      const workflowLoader = new DirectoryWorkflowLoader();
+      const { dotText, prompts } = await workflowLoader.load(dotFilePath);
+      
+      const parser = new DOTParser();
+      const graph = workflowLoader.parseWithPrompts(dotText, prompts);
+      
+      this._validateGraph(graph);
+      
+      if (this.config.enableStylesheet && graph.modelStylesheet) {
+        const stylesheet = new ModelStylesheet(graph.modelStylesheet);
+        this.stylesheetApplicator = new StylesheetApplicator(stylesheet);
+      }
+      
+      const context = this._restoreContext(checkpoint.context_values, checkpoint.logs);
+      const completedNodes = [...checkpoint.completed_nodes];
+      const currentNodeId = checkpoint.current_node;
+      
+      const result = await this._resumeFromState(
+        context, 
+        currentNodeId, 
+        completedNodes, 
+        graph, 
+        logsDir
+      );
+      
+      this.emit('pipeline_resume_complete', { 
+        runId, 
+        success: result.success,
+        resumedFrom: checkpoint.timestamp
+      });
+      
+      return {
+        success: result.success,
+        finalNode: result.finalNode,
+        completedNodes: completedNodes,
+        finalOutcome: result.outcome,
+        resumedFrom: checkpoint.timestamp
+      };
+    } catch (error) {
+      this.emit('pipeline_error', { runId, error: error.message });
+      throw error;
+    }
+  }
+
+  async _resumeFromState(context, currentNodeId, completedNodes, graph, logsDir) {
+    const handlers = this.handlerRegistry;
+    
+    let currentNode = graph.nodes.get(currentNodeId);
+    if (!currentNode) {
+      return {
+        success: false,
+        finalNode: completedNodes[completedNodes.length - 1] || 'unknown',
+        outcome: Outcome.fail(`Cannot find node: ${currentNodeId}`)
+      };
+    }
+    
+    const nextNodes = graph.getOutgoingEdges(currentNodeId);
+    
+    for (const edge of nextNodes) {
+      if (completedNodes.includes(edge.to)) continue;
+      
+      const nextNodeId = edge.to;
+      const nextNode = graph.nodes.get(nextNodeId);
+      
+      if (!nextNode) continue;
+      
+      context.set(Context.CURRENT_NODE, nextNodeId);
+      
+      const handler = handlers.resolve(nextNode);
+      
+      try {
+        const outcome = await handler.execute(nextNode, context, graph, logsDir);
+        
+        completedNodes.push(nextNodeId);
+        
+        context.applyUpdates(outcome.context_updates);
+        
+        this.emit('node_execution_success', { nodeId: nextNodeId, outcome });
+        
+        const checkpoint = this._createCheckpoint(context, nextNodeId, completedNodes);
+        await this._saveCheckpoint(checkpoint, logsDir);
+        
+        if (outcome.status === StageStatus.FAIL) {
+          return {
+            success: false,
+            finalNode: nextNodeId,
+            outcome
+          };
+        }
+        
+        const isExit = nextNode.type === 'exit' || 
+                       nextNode.shape === 'Msquare' || 
+                       nextNode.id === 'exit';
+        
+        if (isExit) {
+          return {
+            success: true,
+            finalNode: nextNodeId,
+            outcome
+          };
+        }
+        
+        const result = await this._resumeFromState(context, nextNodeId, completedNodes, graph, logsDir);
+        return result;
+        
+      } catch (error) {
+        this.emit('node_execution_error', { nodeId: nextNodeId, error: error.message });
+        
+        return {
+          success: false,
+          finalNode: nextNodeId,
+          outcome: Outcome.fail(`Execution error: ${error.message}`)
+        };
+      }
+    }
+    
+    return {
+      success: true,
+      finalNode: currentNodeId,
+      outcome: Outcome.success('Workflow completed')
+    };
+  }
+
+  static async listCheckpoints(logsRoot) {
+    try {
+      const entries = await fs.readdir(logsRoot, { withFileTypes: true });
+      const checkpoints = [];
+      
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        
+        const runId = entry.name;
+        const checkpointPath = path.join(logsRoot, runId, 'checkpoint.json');
+        
+        try {
+          const content = await fs.readFile(checkpointPath, 'utf-8');
+          const checkpoint = JSON.parse(content);
+          
+          checkpoints.push({
+            runId,
+            timestamp: checkpoint.timestamp,
+            currentNode: checkpoint.current_node,
+            completedNodes: checkpoint.completed_nodes
+          });
+        } catch {
+          // No valid checkpoint in this directory
+        }
+      }
+      
+      return checkpoints.sort((a, b) => 
+        new Date(b.timestamp) - new Date(a.timestamp)
+      );
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
+      throw error;
+    }
   }
 
   _generateRunId() {
