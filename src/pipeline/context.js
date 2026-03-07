@@ -82,6 +82,18 @@ export class Context {
     return Array.from(this.values.keys());
   }
 
+  getEnv(key, defaultValue = null) {
+    return process.env[key] || defaultValue;
+  }
+
+  getEnvString(key, defaultValue = '') {
+    return process.env[key] || defaultValue;
+  }
+
+  hasEnv(key) {
+    return key in process.env;
+  }
+
   // Built-in context key constants
   static OUTCOME = 'outcome';
   static PREFERRED_LABEL = 'preferred_label';
@@ -89,4 +101,5 @@ export class Context {
   static CURRENT_NODE = 'current_node';
   static LAST_STAGE = 'last_stage';
   static LAST_RESPONSE = 'last_response';
+  static ENV_PREFIX = 'env.';
 }
