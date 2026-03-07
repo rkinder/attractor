@@ -129,4 +129,104 @@ describe('ToolHandler', () => {
       await fs.access(filePath);
     }
   });
+
+  it('should execute Node.js code', async () => {
+    const node = {
+      id: 'test-node-js',
+      attributes: {
+        tool_command: 'node -e "console.log(2 + 2)"'
+      },
+      attrs: {}
+    };
+    
+    const context = new Context();
+    const graph = {};
+    
+    const result = await handler.execute(node, context, graph, tempLogsDir);
+    
+    assert.strictEqual(result.status, 'success');
+    assert.ok(result.context_updates['tool.output'].includes('4'));
+    
+    // Verify log files
+    const stageDir = path.join(tempLogsDir, node.id);
+    const stdout = await fs.readFile(path.join(stageDir, 'stdout.txt'), 'utf-8');
+    assert.strictEqual(stdout.trim(), '4');
+  });
+
+  it('should capture code execution output', async () => {
+    const node = {
+      id: 'test-node-output',
+      attributes: {
+        tool_command: 'node -e "const x = [1,2,3]; console.log(x.map(n => n * 2));"'
+      },
+      attrs: {}
+    };
+    
+    const context = new Context();
+    const graph = {};
+    
+    const result = await handler.execute(node, context, graph, tempLogsDir);
+    
+    assert.strictEqual(result.status, 'success');
+    assert.ok(result.context_updates['tool.output'].includes('2'));
+    assert.ok(result.context_updates['tool.output'].includes('4'));
+    assert.ok(result.context_updates['tool.output'].includes('6'));
+  });
+
+  it('should handle code execution with errors', async () => {
+    const node = {
+      id: 'test-node-error',
+      attributes: {
+        tool_command: 'node -e "throw new Error(\"test error\")"'
+      },
+      attrs: {}
+    };
+    
+    const context = new Context();
+    const graph = {};
+    
+    const result = await handler.execute(node, context, graph, tempLogsDir);
+    
+    assert.strictEqual(result.status, 'fail');
+    assert.ok(result.failure_reason.includes('Error') || result.failure_reason.includes('test error'));
+  });
+
+  it('should update context with tool output', async () => {
+    const node = {
+      id: 'test-node-context',
+      attributes: {
+        tool_command: 'echo "output_value"'
+      },
+      attrs: {}
+    };
+    
+    const context = new Context();
+    const graph = {};
+    
+    const result = await handler.execute(node, context, graph, tempLogsDir);
+    
+    assert.ok(result.context_updates);
+    assert.strictEqual(result.context_updates['tool.output'], 'output_value');
+    // Note: context updates are in the outcome, caller must apply them to context
+  });
+
+  it('should handle multiline code output', async () => {
+    const node = {
+      id: 'test-node-multiline',
+      attributes: {
+        tool_command: "printf 'line1\\nline2\\nline3'"
+      },
+      attrs: {}
+    };
+    
+    const context = new Context();
+    const graph = {};
+    
+    const result = await handler.execute(node, context, graph, tempLogsDir);
+    
+    assert.strictEqual(result.status, 'success');
+    assert.ok(result.context_updates['tool.output'].includes('line1'));
+    assert.ok(result.context_updates['tool.output'].includes('line2'));
+    assert.ok(result.context_updates['tool.output'].includes('line3'));
+  });
 });
