@@ -26,7 +26,7 @@ Attractor is a DOT-based AI workflow orchestration system with:
 |-------|-------|--------|
 | Phase 1 | Foundational | ✅ Complete |
 | Phase 2 | Reliability | ✅ Complete |
-| Phase 3 | Developer Experience | ✅ Complete |
+| Phase 3 | Developer Experience | ⚠️ Partial |
 | Phase 4 | Advanced Features | ✅ Complete |
 | Phase 5 | Production Infrastructure | 🚧 In Progress |
 
@@ -138,20 +138,21 @@ Remaining:
 See: `specs/documentation-fix/`
 
 #### 8. State Management
-**Priority:** Medium | **Status:** ✅ Enhanced
+**Priority:** Medium | **Status:** ⚠️ Partial - See spec
 
-**Status**: Basic + enhancements implemented.
+**Status**: Partially complete - core done, enhancements remaining.
 
 Implemented:
 - ✅ Context key-value store
 - ✅ Checkpoint/resume for persistence
 - ✅ Type-safe getters (getString, getNumber, getBoolean)
-- ✅ Environment variable injection ($env.VAR in conditions & prompts)
+- ✅ Environment variable injection ($env.VAR)
 
-Possible Enhancements:
+Remaining (Phase 3 Enhancement):
 - [ ] Global cross-workflow context
 - [ ] Session export/import
 - [ ] Secret masking in logs
+- [ ] getObject/getArray accessors
 
 See: `specs/state-management/`
 
@@ -188,20 +189,21 @@ See: `specs/state-management/`
 ### High Priority
 | Item | Spec | Status |
 |------|------|--------|
-| Documentation Audit | specs/documentation-fix/ | ✅ Complete |
-| Tool Handler Security | specs/tool-handler-security/ | ✅ Complete |
+| Documentation Audit | specs/documentation-fix/ | ⚠️ Partial |
+| Server Expansion | specs/server-expansion/ | 📋 Planned |
+| Containerization | specs/containerization/ | 📋 Planned |
+| Distributed Deployment | specs/distributed-deployment/ | 📋 Planned |
 
-### Medium Priority  
+### Medium Priority (Phase 3 Enhancement)
 | Item | Spec | Status |
 |------|------|--------|
-| State Management Enhancements | specs/state-management/ | ✅ Complete |
-| Environment Variable Injection | specs/state-management/ | ✅ Complete |
+| State Management Enhancements | specs/state-management/ | ⚠️ Partial |
 
 ---
 
 ## Phase 5: Production Infrastructure
 
-### 11. Server Expansion
+### 12. Server Expansion
 **Priority:** Critical | **Status:** 📋 Planned
 
 Enable Attractor to run as a long-running service with workflow coordination.
@@ -215,7 +217,7 @@ Requirements:
 
 See: `specs/server-expansion/`
 
-### 12. Containerization
+### 13. Containerization
 **Priority:** Critical | **Status:** 📋 Planned
 
 Deploy Attractor in containerized environments.
@@ -229,7 +231,7 @@ Requirements:
 
 See: `specs/containerization/`
 
-### 13. Distributed Deployment
+### 14. Distributed Deployment
 **Priority:** High | **Status:** 📋 Planned
 
 Scale Attractor horizontally with multiple instances.
