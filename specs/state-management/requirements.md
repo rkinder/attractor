@@ -10,11 +10,18 @@ Enhance state management capabilities for workflows, including global context, s
 - Checkpointing enables session persistence across restarts
 - Secret/variable injection via context
 
+## Architecture Note
+
+**Global Cross-Workflow Context** will be implemented as part of Phase 5a (Shared Infrastructure) using Redis for persistence. This enables:
+- Shared state across multiple workflow runs
+- Cross-instance data access in distributed deployments
+- TTL support for automatic cleanup
+
 ## Technical Specifications
 
-### REQ-STATE-001: Enhanced Global Context
+### REQ-STATE-001: Enhanced Local Context (COMPLETE)
 **From Design**: FR-001  
-**Description**: Make global workflow context more accessible.
+**Description**: Make local workflow context accessible.
 
 **Acceptance Criteria**:
 - [x] Context class provides key-value store with get/set methods
@@ -22,6 +29,21 @@ Enhance state management capabilities for workflows, including global context, s
 - [x] Added `context.getEnv(key)` for environment variables
 - [x] Added `context.getEnvString(key, default)` for env vars with defaults
 - [x] Added `context.hasEnv(key)` to check env var existence
+
+---
+
+### REQ-STATE-001b: Global Cross-Workflow Context (Phase 5a)
+**From Design**: FR-001b  
+**Description**: Redis-backed context shared across workflow runs and instances.
+
+**Acceptance Criteria**:
+- [ ] Redis-backed global key-value store
+- [ ] Cross-workflow data sharing
+- [ ] TTL support for automatic expiration
+- [ ] Atomic operations for concurrent access
+- [ ] Support cross-instance access in distributed deployment
+
+**Implementation Note**: This will be implemented as part of `specs/server-expansion/` using Redis.
 
 ---
 
@@ -88,9 +110,18 @@ class Context {
 
 ## Definition of Done
 
+### Complete (Local Context)
 - [x] Basic context functionality implemented
 - [x] Checkpoint/resume for session persistence
 - [x] Environment variable injection ($env.VAR)
-- [ ] Enhanced global context (cross-workflow)
+- [x] Type-safe getters (getString, getNumber, getBoolean)
+
+### Remaining (Phase 3)
 - [ ] Session export/import
 - [ ] Secret masking in logs
+- [ ] getObject/getArray accessors
+
+### Moved to Phase 5a (Redis-Backed Global Context)
+- [ ] Enhanced global context (cross-workflow) - See `specs/server-expansion/`
+
+Note: The cross-workflow context feature has been moved to Phase 5a as it requires Redis infrastructure.
