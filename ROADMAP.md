@@ -149,10 +149,11 @@ Implemented:
 - ✅ Environment variable injection ($env.VAR)
 
 Remaining (Phase 3 Enhancement):
-- [ ] Global cross-workflow context
 - [ ] Session export/import
 - [ ] Secret masking in logs
 - [ ] getObject/getArray accessors
+
+Note: Global cross-workflow context moved to Phase 5 (requires Redis infrastructure).
 
 See: `specs/state-management/`
 
@@ -190,7 +191,17 @@ See: `specs/state-management/`
 | Item | Spec | Status |
 |------|------|--------|
 | Documentation Audit | specs/documentation-fix/ | ⚠️ Partial |
-| Server Expansion | specs/server-expansion/ | 📋 Planned |
+
+### Phase 5a: Infrastructure (Prerequisite)
+| Item | Spec | Status |
+|------|------|--------|
+| Redis Integration | Part of server-expansion | 📋 Planned |
+| Global Context | Part of server-expansion | 📋 Planned |
+
+### Phase 5b: Production Features
+| Item | Spec | Status |
+|------|------|--------|
+| Coordinator Service | specs/server-expansion/ | 📋 Planned |
 | Containerization | specs/containerization/ | 📋 Planned |
 | Distributed Deployment | specs/distributed-deployment/ | 📋 Planned |
 
@@ -203,14 +214,26 @@ See: `specs/state-management/`
 
 ## Phase 5: Production Infrastructure
 
-### 12. Server Expansion
+### Phase 5a: Shared Infrastructure (Redis)
 **Priority:** Critical | **Status:** 📋 Planned
 
-Enable Attractor to run as a long-running service with workflow coordination.
+Foundation for all Phase 5b and distributed features.
+
+Requirements:
+- Redis integration for state persistence
+- Global cross-workflow context (shared key-value store)
+- Queue infrastructure for async triggers
+- Pub/sub for event distribution
+
+---
+
+### 12. Coordinator Service
+**Priority:** Critical | **Status:** 📋 Planned
+
+Workflow coordination and chaining based on pipeline completion.
 
 Requirements:
 - Coordinator service that responds to pipeline completion events
-- Redis for state persistence (fast reads/writes, TTL)
 - Queue-based triggers for async workflow initiation
 - Human intervention API for external clarifications/approvals
 - WebSocket events for real-time coordinator visibility
@@ -253,7 +276,6 @@ See: `specs/distributed-deployment/`
 - Human Approval Gate
 - Execution Auditing
 - Session Encryption
-- Global Cross-Workflow Context
 
 ---
 
