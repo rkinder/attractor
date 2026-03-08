@@ -13,8 +13,22 @@ Attractor is a DOT-based AI workflow orchestration system with:
 - LLM integration (Kilo, LM Studio)
 - Event-driven pipeline engine
 - Checkpointing infrastructure
+- HTTP server for remote execution
 
-**All Phase 1-4 features implemented!** ✅
+**Phase 1-4 features implemented!** ✅
+**Phase 5: Production Infrastructure - In Progress** 🚧
+
+---
+
+## Phases Overview
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| Phase 1 | Foundational | ✅ Complete |
+| Phase 2 | Reliability | ✅ Complete |
+| Phase 3 | Developer Experience | ✅ Complete |
+| Phase 4 | Advanced Features | ✅ Complete |
+| Phase 5 | Production Infrastructure | 🚧 In Progress |
 
 ---
 
@@ -183,6 +197,55 @@ See: `specs/state-management/`
 | State Management Enhancements | specs/state-management/ | ✅ Complete |
 | Environment Variable Injection | specs/state-management/ | ✅ Complete |
 
+---
+
+## Phase 5: Production Infrastructure
+
+### 11. Server Expansion
+**Priority:** Critical | **Status:** 📋 Planned
+
+Enable Attractor to run as a long-running service with workflow coordination.
+
+Requirements:
+- Coordinator service that responds to pipeline completion events
+- Redis for state persistence (fast reads/writes, TTL)
+- Queue-based triggers for async workflow initiation
+- Human intervention API for external clarifications/approvals
+- WebSocket events for real-time coordinator visibility
+
+See: `specs/server-expansion/`
+
+### 12. Containerization
+**Priority:** Critical | **Status:** 📋 Planned
+
+Deploy Attractor in containerized environments.
+
+Requirements:
+- Dockerfile with multi-stage build (node:20-alpine)
+- Docker Compose with Redis and named volumes
+- Health checks for container readiness
+- Graceful shutdown handling
+- Persistent volumes for logs and artifacts
+
+See: `specs/containerization/`
+
+### 13. Distributed Deployment
+**Priority:** High | **Status:** 📋 Planned
+
+Scale Attractor horizontally with multiple instances.
+
+Requirements:
+- Redis pub/sub for event distribution across instances
+- Pipeline ownership to prevent duplicate execution
+- Coordinator election via Redis locks
+- Shared filesystem for cross-instance artifact access
+- Nginx load balancer configuration
+- Health-based routing and failover
+
+See: `specs/distributed-deployment/`
+
+---
+
 ### Future Enhancements (Not Required for MVP)
 - Sandbox Execution (Docker-based)
 - Human Approval Gate
@@ -202,7 +265,7 @@ To enable basic code development, implement in order:
 
 With these three, you have: "Generate code → run it → use output to refine → repeat"
 
-✅ **All Phase 1-4 features are now implemented!**
+✅ **Phases 1-4 complete. Phase 5 in progress!**
 
 ---
 
@@ -211,5 +274,6 @@ With these three, you have: "Generate code → run it → use output to refine �
 - Core: `src/index.js`, `src/pipeline/engine.js`
 - Handlers: `src/handlers/codergen.js`, `parallel.js`, `fanin.js`
 - LLM: `src/llm/adapters/`, `src/llm/types.js`
+- Server: `src/server/index.js`, `pipeline-manager.js`
 - Examples: `examples/*.dot`
-- Specs: `specs/variable-expansion/`, `specs/checkpoint-resume/`, etc.
+- Specs: `specs/server-expansion/`, `specs/containerization/`, `specs/distributed-deployment/`
