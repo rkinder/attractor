@@ -1,0 +1,151 @@
+# Architectural Review
+
+## Purpose
+This subprocess performs an independent architectural review to ensure the design is sound, maintainable, and avoids common architectural pitfalls.
+
+## Context
+
+### Design Document
+```
+$design_document
+```
+
+### Requirements Document
+```
+$requirements_summary
+```
+
+### Tasks Document
+```
+$tasks_summary
+```
+
+## Review Dimensions
+
+### 1. Architectural Principles
+
+| Principle | Assessment | Notes |
+|-----------|------------|-------|
+| **Separation of Concerns** | ✓/✗ | |
+| **Single Responsibility** | ✓/✗ | |
+| **Dependency Inversion** | ✓/✗ | |
+| **Interface Segregation** | ✓/✗ | |
+| **Open/Closed Principle** | ✓/✗ | |
+
+### 2. Design Patterns
+Assess whether appropriate patterns are used:
+
+- **Creational**: Factory, Builder, Singleton - appropriate?
+- **Structural**: Adapter, Facade, Proxy - appropriate?
+- **Behavioral**: Strategy, Observer, State - appropriate?
+- **Architectural**: MVC, Layered, Microservices - appropriate?
+
+### 3. Component Analysis
+
+For each major component:
+
+```
+### Component: [Name]
+**Responsibility**: [What it does]
+**Dependencies**: [What it depends on]
+**Cohesion**: High/Medium/Low
+**Coupling**: Low/Medium/High
+**Issues**: [Any problems identified]
+```
+
+### 4. Data Flow Analysis
+- Is data flow clear and unidirectional?
+- Are data transformations explicit?
+- Is state management appropriate?
+- Are there potential race conditions?
+
+### 5. Scalability Assessment
+
+| Aspect | Current | Future Scaling |
+|--------|---------|----------------|
+| **Horizontal Scaling** | | |
+| **Vertical Scaling** | | |
+| **Data Volume** | | |
+| **User Load** | | |
+
+### 6. Maintainability
+
+| Factor | Assessment |
+|--------|------------|
+| Code complexity | Low/Med/High |
+| Testability | Easy/Medium/Hard |
+| Configurability | Good/Limited |
+| Extensibility | Easy/Moderate/Difficult |
+
+### 7. Integration Points
+
+For each external integration:
+
+```
+### Integration: [External System]
+**Type**: [API/Database/Queue/File]
+**Protocol**: [HTTP/gRPC/TCP/etc]
+**Risk**: Low/Medium/High
+**Mitigation**: [Any needed]
+```
+
+### 8. Common Pitfalls Check
+
+| Pitfall | Present? | Mitigation |
+|---------|----------|------------|
+| **God Objects** | Y/N | |
+| **Circular Dependencies** | Y/N | |
+| **Tight Coupling** | Y/N | |
+| **Spaghetti Code** | Y/N | |
+| **Missing Abstractions** | Y/N | |
+| **Premature Optimization** | Y/N | |
+| **Missing Error Handling** | Y/N | |
+
+## Output Format
+
+```
+# Architectural Review Report
+
+## Executive Summary
+[Overall architecture assessment]
+
+## Principles Assessment
+[Table from above]
+
+## Component Review
+[All component analyses]
+
+## Integration Review
+[All integration points]
+
+## Scalability Assessment
+[Current and future scaling analysis]
+
+## Maintainability Assessment
+[Maintainability factors]
+
+## Identified Issues
+### Critical
+- [Issue 1]
+- [Issue 2]
+
+### High
+- [Issue 3]
+
+### Medium
+- [Issue 4]
+
+## Recommendations
+1. [Recommendation 1]
+2. [Recommendation 2]
+
+## Risk Summary
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| ... | ... | ... |
+
+## Review Conclusion
+- [ ] Architecture approved
+- [ ] Minor issues to address
+- [ ] Major revisions needed
+```

@@ -1,0 +1,83 @@
+# Generalize Problem Statement
+
+## Context
+You have completed the initial requirement intake. Now you need to elevate the specific request into a more general problem statement that will lead to a more robust and flexible solution.
+
+## Input
+
+### Original Request
+```
+$user_request
+```
+
+### Intake Summary
+```
+$intake_summary
+```
+
+## Your Task
+
+### Step 1: Abstract the Problem
+Identify the underlying category of problem this request falls into:
+
+- Is this a data processing problem?
+- Is this a user interaction problem?
+- Is this an integration problem?
+- Is this an automation problem?
+- Is this a data storage/retrieval problem?
+- Is this a communication/synchronization problem?
+
+### Step 2: Identify the Core Concern
+What is the fundamental challenge being addressed? Not "what should be built" but "what problem needs solving."
+
+Example:
+- Request: "I need a script to rename all my photos"
+- Core Concern: "Managing file organization based on metadata"
+
+### Step 3: Consider Related Problems
+What other problems might be solved by addressing this core concern? This helps ensure the solution is generalizable.
+
+### Step 4: Identify Success Criteria
+What would make this project successful? Frame these as outcomes, not features.
+
+### Step 5: Consider Failure Modes
+What could go wrong? What would make this project unsuccessful?
+
+## Output Format
+
+```
+# Generalized Problem Statement
+
+## Core Problem Category
+[Category from Step 1]
+
+## Problem Abstraction
+[One sentence capturing the fundamental challenge]
+
+## Core Concern
+[What the requestor truly needs solved]
+
+## Related Problems
+1. [Problem 1]
+2. [Problem 2]
+3. [Problem 3]
+
+## Success Criteria (Outcomes)
+1. [Outcome 1]
+2. [Outcome 2]
+3. [Outcome 3]
+
+## Potential Failure Modes
+1. [Failure mode 1]
+2. [Failure mode 2]
+
+## Implications for Solution Design
+[Any insights that should inform the solution approach]
+```
+
+## Important Notes
+
+- The goal is to find the "right" problem to solve, not just solve the problem right
+- A well-generalized problem allows for more flexible and robust solutions
+- Consider edge cases and related use cases
+- Think about scalability and future needs

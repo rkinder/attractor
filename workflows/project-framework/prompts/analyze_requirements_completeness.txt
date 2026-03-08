@@ -1,0 +1,122 @@
+# Analyze Requirements Completeness
+
+## Context
+You have the complete specification package (design, requirements, tasks). Now you need to analyze the requirements for completeness, quality, and potential gaps.
+
+## Input
+
+### Design Document
+```
+$design_document_summary
+```
+
+### Requirements Document
+```
+$requirements_document
+```
+
+### Tasks Document
+```
+$tasks_document
+```
+
+## Your Task
+
+Perform a comprehensive analysis of the requirements package.
+
+## Analysis Framework
+
+### 1. Completeness Check
+For each requirement category, assess:
+
+| Category | Question | Finding |
+|----------|----------|---------|
+| **Functional** | Are all user-facing features specified? | |
+| **Non-Functional** | Are performance, security, scalability defined? | |
+| **Integration** | Are all external interfaces specified? |
+| **Error Handling** | Are all error cases covered? | |
+| **Edge Cases** | Are boundary conditions specified? | |
+
+### 2. Quality Assessment
+
+| Aspect | Question | Rating | Notes |
+|--------|----------|--------|-------|
+| **Testability** | Can each requirement be verified? | High/Med/Low | |
+| **Clarity** | Is each requirement unambiguous? | High/Med/Low | |
+| **Traceability** | Can each requirement be traced to source? | High/Med/Low | |
+| **Consistency** | Do requirements contradict each other? | Yes/No | |
+| **Feasibility** | Are requirements implementable? | High/Med/Low | |
+
+### 3. Gap Analysis
+Identify missing requirements:
+
+- **Missing Functionality**: What should be included but isn't?
+- **Missing Constraints**: What limits aren't specified?
+- **Missing Scenarios**: What use cases aren't covered?
+- **Missing Quality Attributes**: What non-functional aspects need definition?
+
+### 4. Risk Assessment
+For each gap or quality issue:
+
+```
+### Risk: [Description]
+**Severity**: Critical/High/Medium/Low
+**Impact**: [What could go wrong]
+**Mitigation**: [How to address]
+```
+
+### 5. Interview Preparation
+Prepare questions for the requestor if clarification is needed:
+
+```
+### Questions for Requestor
+1. [Question about gap 1]
+2. [Question about gap 2]
+```
+
+## Output Format
+
+```
+# Requirements Completeness Analysis
+
+## Completeness Summary
+| Category | Status | Gaps |
+|----------|--------|------|
+| Functional | Complete/Partial/Missing | ... |
+| Non-Functional | Complete/Partial/Missing | ... |
+| Integration | Complete/Partial/Missing | ... |
+| Error Handling | Complete/Partial/Missing | ... |
+| Edge Cases | Complete/Partial/Missing | ... |
+
+## Quality Assessment
+[Summary table from above]
+
+## Identified Gaps
+### Critical
+- [Gap 1]
+- [Gap 2]
+
+### High
+- [Gap 3]
+
+### Medium
+- [Gap 4]
+
+## Risks
+### Risk-XXX: [Title]
+- Severity: ...
+- Impact: ...
+- Mitigation: ...
+
+## Recommendations
+1. [Recommendation 1]
+2. [Recommendation 2]
+
+## Questions for Requestor
+[If any]
+
+## Overall Assessment
+- [ ] Ready for test generation
+- [ ] Needs revision
+- [ ] Needs more information
+```

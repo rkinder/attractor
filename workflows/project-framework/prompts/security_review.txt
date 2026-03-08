@@ -1,0 +1,165 @@
+# Security Review
+
+## Purpose
+This subprocess performs an independent security review to identify vulnerabilities, security design flaws, and common security pitfalls.
+
+## Context
+
+### Design Document
+```
+$design_summary
+```
+
+### Requirements Document
+```
+$requirements_summary
+```
+
+### Tasks Document
+```
+$tasks_summary
+```
+
+## Security Review Framework
+
+### 1. OWASP Top 10 Categories
+
+For each relevant category, assess the application:
+
+| Category | Risk Level | Findings |
+|----------|------------|----------|
+| **A01: Broken Access Control** | Low/Med/High/Crit | |
+| **A02: Cryptographic Failures** | Low/Med/High/Crit | |
+| **A03: Injection** | Low/Med/High/Crit | |
+| **A04: Insecure Design** | Low/Med/High/Crit | |
+| **A05: Security Misconfiguration** | Low/Med/High/Crit | |
+| **A06: Vulnerable Components** | Low/Med/High/Crit | |
+| **A07: Auth Failures** | Low/Med/High/Crit | |
+| **A08: Data Integrity Failures** | Low/Med/High/Crit | |
+| **A09: Logging Failures** | Low/Med/High/Crit | |
+| **A10: SSRF** | Low/Med/High/Crit | |
+
+### 2. Authentication & Authorization
+
+```
+### Authentication
+**Mechanism**: [What mechanism is used]
+**Strength**: Strong/Medium/Weak
+**Issues**: [Any problems]
+
+### Authorization
+**Model**: [RBAC/ABAC/etc]
+**Implementation**: [How enforced]
+**Issues**: [Any problems]
+```
+
+### 3. Input Validation
+
+| Input Type | Validation | Sanitization | Risk |
+|------------|------------|---------------|------|
+| User strings | | | |
+| Numbers | | | |
+| Files | | | |
+| API parameters | | | |
+| Headers | | | |
+
+### 4. Data Protection
+
+- **At Rest**: How is stored data protected?
+- **In Transit**: How is transmitted data protected?
+- **Sensitive Data**: How are secrets/credentials handled?
+- **Logs**: Are sensitive data filtered from logs?
+
+### 5. Error Handling & Information Leakage
+
+- Are error messages too detailed?
+- Does the system leak version information?
+- Are stack traces exposed?
+- Are internal paths exposed?
+
+### 6. Dependency & Component Security
+
+- Are third-party libraries up to date?
+- Are known CVEs checked?
+- Are there unnecessary dependencies?
+
+### 7. Common Vulnerability Patterns
+
+| Pattern | Check | Findings |
+|---------|-------|----------|
+| SQL Injection | Parameterized queries? | |
+| XSS | Output encoding? | |
+| CSRF | Tokens? | |
+| XXE | XML parsing safe? | |
+| Path Traversal | Input validation? | |
+| Command Injection | Safe execution? | |
+
+### 8. Threat Modeling
+
+For each identified threat:
+
+```
+### Threat: [Name]
+**Category**: [Spoofing/Tampering/Repudiation/Info Disclosure/DoS/Elevation]
+**Likelihood**: Low/Med/High
+**Impact**: Low/Med/High/Crit
+**Mitigation**: [How addressed]
+```
+
+## Output Format
+
+```
+# Security Review Report
+
+## Executive Summary
+[Overall security posture]
+
+## OWASP Assessment
+[OWASP Top 10 table]
+
+## Authentication & Authorization
+[Assessment above]
+
+## Input Validation
+[Validation matrix]
+
+## Data Protection
+[Data handling assessment]
+
+## Error Handling
+[Error handling security]
+
+## Dependency Review
+[Dependency analysis]
+
+## Identified Vulnerabilities
+### Critical
+- [Vuln 1]
+- [Vuln 2]
+
+### High
+- [Vuln 3]
+
+### Medium
+- [Vuln 4]
+
+### Low
+- [Vuln 5]
+
+## Threat Model
+[All identified threats]
+
+## Recommendations
+1. [Recommendation 1]
+2. [Recommendation 2]
+
+## Risk Summary
+| Risk | Severity | Fix Priority |
+|------|----------|--------------|
+| ... | ... | ... |
+
+## Review Conclusion
+- [ ] Security approved
+- [ ] Issues to address before implementation
+- [ ] Requires significant redesign
+```

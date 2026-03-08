@@ -1,0 +1,140 @@
+# Independent Test Generation
+
+## Purpose
+This subprocess generates test cases INDEPENDENTLY from the requirements specification. The goal is to discover edge cases, failure modes, and testing requirements that might have been missed during spec development.
+
+## Context
+
+### Design Document
+```
+$design_summary
+```
+
+### Requirements Document
+```
+$requirements_summary
+```
+
+### Tasks Document
+```
+$tasks_summary
+```
+
+## Why Independent Testing?
+
+The requirements document specifies WHAT should be tested. This subprocess asks: "What else SHOULD be tested that wasn't specified?"
+
+## Test Generation Strategy
+
+### 1. Equivalence Class Partitioning
+For each input/output:
+
+- What are the valid input ranges?
+- What are the invalid input ranges?
+- What are boundary values?
+- What are special values (null, empty, max)?
+
+### 2. Combinatorial Analysis
+- What combinations of inputs are possible?
+- Which combinations are likely to cause issues?
+- What are state-dependent behaviors?
+
+### 3. Failure Mode Analysis
+- What can go wrong?
+- How does the system fail?
+- What are the error conditions?
+
+### 4. Edge Case Mining
+- What are the unusual but possible scenarios?
+- What happens at boundaries?
+- What about concurrent operations?
+- What about timing issues?
+
+### 5. Negative Testing
+- What invalid inputs should be rejected?
+- How should rejection be handled?
+- What are security-sensitive inputs?
+
+## Test Case Structure
+
+For each test case:
+
+```
+### TC-INDEX-XXX: [Test Case Name]
+**Category**: [Unit/Integration/E2E/Negative/Security/Performance]
+**Feature**: [Which feature this tests]
+**Preconditions**: [What must be true before test]
+**Input**: [Specific input values]
+**Expected Behavior**: [What should happen]
+**Edge Case Rationale**: [Why this edge case matters]
+```
+
+## Coverage Areas
+
+### Functional Coverage
+- Happy path scenarios
+- Alternate flows
+- Error scenarios
+
+### Boundary Coverage
+- Min/max values
+- Empty/null values
+- Overflow/underflow
+
+### Combination Coverage
+- Input combinations
+- State transitions
+- Concurrent operations
+
+### Security Coverage
+- Input validation
+- Authentication/authorization
+- Data protection
+
+### Performance Coverage
+- Response times
+- Resource usage
+- Scalability limits
+
+## Output Format
+
+```
+# Independent Test Generation Report
+
+## Test Summary
+| Category | Count |
+|----------|-------|
+| Functional | X |
+| Boundary | X |
+| Negative | X |
+| Security | X |
+| Performance | X |
+
+## Test Cases
+
+### Functional Tests
+[All functional test cases]
+
+### Boundary Tests
+[All boundary test cases]
+
+### Negative Tests
+[All negative test cases]
+
+### Security Tests
+[All security test cases]
+
+### Performance Tests
+[All performance test cases]
+
+## New Insights Discovered
+[Things the test generation revealed that weren't in requirements]
+
+## Coverage Comparison
+| Requirement | Spec Tests | Independent Tests | Gap? |
+|-------------|------------|-------------------|------|
+| REQ-001 | TC-001 | TC-INDEX-001, TC-INDEX-002 | None/Added |
+
+## Recommendations
+[Any recommendations for spec updates based on test generation]
+```

@@ -1,0 +1,75 @@
+# Develop Tasks Document
+
+## Context
+The Requirements Document has been approved. Now you need to create an actionable implementation checklist.
+
+## Input
+
+### Requirements Document
+```
+$requirements_document
+```
+
+### Design Document
+```
+$design_document
+```
+
+## Your Task
+
+Create a Tasks Document (`tasks.md`) with atomic, ordered implementation tasks.
+
+## Required Sections
+
+### 1. Implementation Tasks
+For each task:
+
+```
+### TASK-XXX: [Task Description]
+**Requirements Covered**: REQ-001, REQ-002
+**Depends On**: [Other task or None]
+**Files to Modify**: [Specific files]
+**Estimated Effort**: [Time estimate]
+```
+
+Group tasks into logical phases:
+- Phase 1: Core Implementation
+- Phase 2: Integration
+- Phase 3: Testing
+- Phase 4: Documentation
+
+### 2. Test Cases
+For each requirement, derive test cases:
+
+```
+### TC-XXX: [Test Case Name]
+**Requirement**: REQ-XXX
+**Type**: [Unit/Integration/E2E]
+**Preconditions**: [What must be true before test]
+**Steps**:
+1. [Step 1]
+2. [Step 2]
+**Expected Result**: [What should happen]
+```
+
+### 3. Definition of Done
+Final verification checklist:
+- [ ] All implementation tasks completed
+- [ ] All test cases pass
+- [ ] Code reviewed
+- [ ] Documentation updated
+- [ ] No regressions
+
+## Quality Checks
+
+- [ ] All requirements have corresponding tasks
+- [ ] All requirements have test cases
+- [ ] Tasks are atomic and ordered
+- [ ] Dependencies are clear
+- [ ] Definition of Done is complete
+
+## Output
+
+Save to: `specs/[project-name]/tasks.md`
+
+Follow format from `.opencode/skills/ears-format/SKILL.md`

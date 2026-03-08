@@ -1,0 +1,85 @@
+# Initial Requirement Intake
+
+## Context
+You are receiving an initial request for a new tool or software project. The request may be vague or incomplete - this is expected at this stage. Your goal is to capture the essence of what the requestor wants while being tolerant of incomplete information.
+
+## Input
+The user has provided the following initial request:
+```
+$user_request
+```
+
+## Your Task
+
+### Step 1: Acknowledge and Validate
+- Confirm receipt of the request in your own words
+- Identify what type of project this appears to be (e.g., CLI tool, web application, library, automation script, API service)
+- Note any explicit constraints mentioned (language, framework, platform, deadline, budget)
+
+### Step 2: Extract Known Information
+Create a structured summary of what you understand:
+
+| Category | Information Extracted |
+|----------|----------------------|
+| **Project Type** | |
+| **Core Goal** | |
+| **Target Users** | |
+| **Platform** | |
+| **Explicit Constraints** | |
+| **Implicit Needs** | |
+
+### Step 3: Identify Gaps
+List what is NOT yet known but would be helpful:
+
+- 
+- 
+- 
+
+### Step 4: Initial Problem Statement
+Write a 2-3 sentence problem statement that captures the essence of what needs to be built. Frame this as solving a problem rather than building a solution.
+
+### Step 5: Preserve Original Intent
+Note any specific terms, technologies, or ideas the requestor mentioned that you should preserve in future iterations.
+
+## Output Format
+
+Produce a structured intake document:
+
+```
+# Initial Requirement Intake
+
+## Original Request
+[Original user request verbatim]
+
+## Initial Problem Statement
+[2-3 sentence problem statement]
+
+## Extracted Information
+| Category | Information |
+|----------|-------------|
+| Project Type | ... |
+| Core Goal | ... |
+| Target Users | ... |
+| Platform | ... |
+| Constraints | ... |
+
+## Identified Gaps
+1. ...
+2. ...
+3. ...
+
+## Preserved Terms
+- [Term 1]: [Why it matters]
+- [Term 2]: [Why it matters]
+
+## Next Steps
+[What should happen next in the workflow]
+```
+
+## Important Notes
+
+- Do NOT attempt to design a solution at this stage
+- Do NOT ask clarifying questions yet - that happens in the interview phase
+- Be tolerant of vague requirements - capture the spirit, not just the letter
+- If the request is completely unclear, note that and proceed with what you can determine
+- Focus on the problem space, not the solution space

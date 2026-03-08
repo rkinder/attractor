@@ -1,0 +1,186 @@
+digraph ProjectFramework {
+    graph [
+        goal="Develop complete project framework from vague requirements through specification, independent testing, architectural review, and security validation",
+        rankdir=TB,
+        model_strategy="development"
+    ]
+    
+    start [shape=Mdiamond, label="Start: New Project Request"]
+    exit [shape=Msquare, label="Project Framework Complete"]
+    
+    // ============================================================
+    // PHASE 1: INITIAL INTAKE & PROBLEM GENERALIZATION
+    // ============================================================
+    
+    initial_intake [
+        label="Initial Requirement Intake",
+        prompt_file="prompts/initial_requirement_intake.txt",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    generalize_problem [
+        label="Generalize Problem Statement",
+        prompt_file="prompts/generalize_problem.txt",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // ============================================================
+    // PHASE 2: CLARIFICATION INTERVIEW (Subprocess)
+    // ============================================================
+    
+    clarification_interview [
+        shape=doublecircle,
+        label="Clarification Interview",
+        prompt_file="prompts/clarification_interview.txt",
+        complexity="medium",
+        timeout="600s"
+    ]
+    
+    assess_interview_output [
+        label="Assess Interview Output",
+        prompt="Analyze the interview responses to determine if requirements are sufficiently clear. Identify any gaps, ambiguities, or areas needing further clarification.",
+        context_hint="documentation",
+        complexity="low",
+        timeout="120s"
+    ]
+    
+    // ============================================================
+    // PHASE 3: EARS-BASED SPECIFICATION DEVELOPMENT
+    // ============================================================
+    
+    develop_design [
+        label="Develop Design Document",
+        prompt_file="prompts/develop_design.txt",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    develop_requirements [
+        label="Develop Requirements Document", 
+        prompt_file="prompts/develop_requirements.txt",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    develop_tasks [
+        label="Develop Tasks Document",
+        prompt_file="prompts/develop_tasks.txt",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // ============================================================
+    // PHASE 4: REQUIREMENTS COMPLETENESS ANALYSIS
+    // ============================================================
+    
+    analyze_requirements_completeness [
+        label="Analyze Requirements Completeness",
+        prompt_file="prompts/analyze_requirements_completeness.txt",
+        complexity="high",
+        timeout="450s"
+    ]
+    
+    // ============================================================
+    // PHASE 5: INDEPENDENT TEST GENERATION (Subprocess)
+    // ============================================================
+    
+    independent_test_generation [
+        shape=doublecircle,
+        label="Independent Test Generation",
+        prompt_file="prompts/independent_test_generation.txt",
+        complexity="high",
+        timeout="900s"
+    ]
+    
+    // ============================================================
+    // PHASE 6: ARCHITECTURAL REVIEW (Subprocess)
+    // ============================================================
+    
+    architectural_review [
+        shape=doublecircle,
+        label="Architectural Review",
+        prompt_file="prompts/architectural_review.txt",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // ============================================================
+    // PHASE 7: SECURITY REVIEW (Subprocess)
+    // ============================================================
+    
+    security_review [
+        shape=doublecircle,
+        label="Security Review",
+        prompt_file="prompts/security_review.txt",
+        complexity="high",
+        timeout="600s"
+    ]
+    
+    // ============================================================
+    // PHASE 8: FINAL SPECIFICATION CONSOLIDATION
+    // ============================================================
+    
+    consolidate_specifications [
+        label="Consolidate Specifications",
+        prompt_file="prompts/consolidate_specifications.txt",
+        complexity="medium",
+        timeout="300s"
+    ]
+    
+    // ============================================================
+    // HUMAN GATE: SPECIFICATION APPROVAL
+    // ============================================================
+    
+    spec_approval [
+        shape=hexagon,
+        label="Specification Approval",
+        prompt="Review the complete specification package including design, requirements, tasks, test cases, and review findings. Approve for implementation or request revisions."
+    ]
+    
+    // ============================================================
+    // FLOW DEFINITIONS
+    // ============================================================
+    
+    // Phase 1: Intake flow
+    start -> initial_intake
+    initial_intake -> generalize_problem
+    
+    // Phase 2: Interview flow with loop back
+    generalize_problem -> clarification_interview
+    clarification_interview -> assess_interview_output
+    
+    // Decision: Is more clarification needed?
+    assess_interview_output -> generalize_problem [label="[M] More Clarification Needed"]
+    assess_interview_output -> develop_design [label="[C] Clear Enough to Proceed"]
+    
+    // Phase 3: Specification development
+    develop_design -> develop_requirements
+    develop_requirements -> develop_tasks
+    
+    // Phase 4: Requirements analysis
+    develop_tasks -> analyze_requirements_completeness
+    
+    // Phase 5: Independent tests
+    analyze_requirements_completeness -> independent_test_generation
+    
+    // Phase 6: Architecture review
+    independent_test_generation -> architectural_review
+    
+    // Phase 7: Security review  
+    architectural_review -> security_review
+    
+    // Phase 8: Consolidation
+    security_review -> consolidate_specifications
+    consolidate_specifications -> spec_approval
+    
+    // Approval decisions
+    spec_approval -> develop_design [label="[R] Revise Design"]
+    spec_approval -> develop_requirements [label="[E] Revise Requirements"]
+    spec_approval -> analyze_requirements_completeness [label="[A] Revise Analysis"]
+    spec_approval -> independent_test_generation [label="[T] Add More Tests"]
+    spec_approval -> architectural_review [label="[V] Re-review Architecture"]
+    spec_approval -> security_review [label="[S] Re-review Security"]
+    spec_approval -> exit [label="[P] Proceed to Implementation"]
+}

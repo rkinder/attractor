@@ -1,0 +1,137 @@
+# Clarification Interview
+
+## Purpose
+This subprocess engages the requestor in a structured dialogue to gather the information needed to create a comprehensive specification. The interview uses the EARS (Easy Approach to Requirements Syntax) methodology to guide questioning.
+
+## Context
+
+### Generalized Problem
+```
+$generalized_problem
+```
+
+### Current Understanding
+```
+$intake_summary
+```
+
+## Interview Strategy
+
+### Phase 1: Problem Understanding (2-3 questions)
+
+Ask questions that help understand the "why" behind the request:
+
+1. **What problem does this solve for you?**
+   - Dig deeper: "Can you tell me more about when this problem occurs?"
+   - Follow up: "How do you currently handle this?"
+
+2. **Who will use this?**
+   - Dig deeper: "What technical expertise do they have?"
+   - Follow up: "How many users are we talking about?"
+
+### Phase 2: Scope Definition (2-3 questions)
+
+3. **What would be the minimum viable version?**
+   - Purpose: Identify must-haves vs nice-to-haves
+   
+4. **What should definitely NOT be included?**
+   - Purpose: Prevent feature creep
+
+5. **Are there any existing solutions you've tried?**
+   - Purpose: Understand what didn't work
+
+### Phase 3: Technical Context (2-3 questions)
+
+6. **What environment will this run in?**
+   - OS, cloud, on-premise, browser, etc.
+   
+7. **What other systems does this need to integrate with?**
+   
+8. **Are there any technology preferences or constraints?**
+
+### Phase 4: Quality Attributes (2-3 questions)
+
+9. **How important is performance/speed?**
+   - What are the expectations?
+   
+10. **How important is security?**
+    - What data will be handled?
+    
+11. **How important is reliability/uptime?**
+
+### Phase 5: Edge Cases (1-2 questions)
+
+12. **What happens when things go wrong?**
+    - Error handling expectations
+    
+13. **Are there any special cases we should consider?**
+
+## Interview Execution
+
+Use the following structure for each question:
+
+```
+QUESTION: [The question to ask]
+PURPOSE: [Why this question matters]
+FOLLOW-UP: [Potential follow-up based on answer]
+```
+
+## Response Handling
+
+When the requestor provides an answer:
+1. Acknowledge and paraphrase their response
+2. Note key information extracted
+3. Move to next relevant question based on their response
+
+## Output Format
+
+After the interview completes, produce:
+
+```
+# Clarification Interview Summary
+
+## Questions Asked
+| # | Question | Requestor Response | Key Information |
+|---|----------|---------------------|------------------|
+| 1 | ... | ... | ... |
+| ... | ... | ... | ... |
+
+## Updated Problem Understanding
+[Revised problem statement based on interview]
+
+## Identified Requirements (Pre-Specification)
+### Must Have
+- [Requirement 1]
+- [Requirement 2]
+
+### Should Have
+- [Requirement 1]
+- [Requirement 2]
+
+### Nice to Have
+- [Requirement 1]
+- [Requirement 2]
+
+## Technical Constraints Identified
+- [Constraint 1]
+- [Constraint 2]
+
+## Open Questions Remaining
+1. [Question]
+2. [Question]
+
+## Readiness Assessment
+- [ ] Clear enough to proceed to design
+- [ ] Need another interview pass
+- [ ] Need more research/investigation
+```
+
+## Interview Guidelines
+
+- Be conversational, not interrogative
+- Listen more than you speak
+- Ask "why" to understand underlying needs
+- Don't assume - verify understanding
+- Note when requestor is uncertain vs confident
+- Identify contradictions or inconsistencies
+- Watch for unspoken assumptions

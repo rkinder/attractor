@@ -1,0 +1,161 @@
+# Consolidate Specifications
+
+## Purpose
+This subprocess consolidates all the specification artifacts, review findings, and test cases into a complete, coherent project framework document.
+
+## Input
+
+### Design Document
+```
+$design_document
+```
+
+### Requirements Document
+```
+$requirements_document
+```
+
+### Tasks Document
+```
+$tasks_document
+```
+
+### Requirements Completeness Analysis
+```
+$completeness_analysis
+```
+
+### Independent Test Generation
+```
+$independent_tests
+```
+
+### Architectural Review
+```
+$architectural_review
+```
+
+### Security Review
+```
+$security_review
+```
+
+## Your Task
+
+Create a unified project framework document that combines all artifacts.
+
+## Consolidation Structure
+
+### 1. Project Overview
+- Project name
+- Purpose
+- Scope
+- Target users
+
+### 2. Problem Statement
+- Original problem
+- Generalized problem
+- Success criteria
+
+### 3. Architecture Summary
+- High-level architecture
+- Key components
+- Data flow
+
+### 4. Requirements Summary
+- Functional requirements (EARS format)
+- Non-functional requirements
+- Constraints
+
+### 5. Test Suite
+- Requirements-based tests
+- Independent edge case tests
+- Security tests
+- Performance tests
+
+### 6. Implementation Plan
+- Task breakdown
+- Dependencies
+- Phases
+- Definition of Done
+
+### 7. Review Findings Summary
+- Architectural decisions and rationale
+- Security considerations
+- Risks and mitigations
+
+### 8. Traceability Matrix
+| Requirement | Design | Tasks | Tests | Reviews |
+|-------------|--------|-------|-------|---------|
+| REQ-001 | FR-001 | TASK-001 | TC-001, TC-INDEX-001 | ARCH-001 |
+
+## Output Format
+
+```
+# Project Framework: [Project Name]
+
+## 1. Project Overview
+[Overview section]
+
+## 2. Problem Statement
+[Problem statement section]
+
+## 3. Architecture
+[Architecture summary]
+
+## 4. Requirements
+### 4.1 Functional Requirements
+[List with EARS format]
+
+### 4.2 Non-Functional Requirements
+[Performance, security, etc]
+
+### 4.3 Constraints
+[All constraints]
+
+## 5. Test Suite
+### 5.1 Requirements-Based Tests
+[All tests from requirements]
+
+### 5.2 Independent Tests
+[All edge case tests]
+
+### 5.3 Security Tests
+[All security tests]
+
+### 5.4 Performance Tests
+[All performance tests]
+
+## 6. Implementation Plan
+### 6.1 Tasks
+[All tasks in order]
+
+### 6.2 Phases
+[Phase breakdown]
+
+### 6.3 Definition of Done
+[Complete DoD]
+
+## 7. Review Findings
+### 7.1 Architecture Decisions
+[Key architectural decisions]
+
+### 7.2 Security Considerations
+[Security findings]
+
+### 7.3 Risks and Mitigations
+[All identified risks]
+
+## 8. Traceability
+[Complete traceability matrix]
+
+## Approval Status
+- [ ] Design Approved
+- [ ] Requirements Approved
+- [ ] Tests Approved
+- [ ] Architecture Approved
+- [ ] Security Approved
+
+## Sign-off
+- [ ] Ready for Implementation
+```

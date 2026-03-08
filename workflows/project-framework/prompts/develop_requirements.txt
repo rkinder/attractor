@@ -1,0 +1,67 @@
+# Develop Requirements Document
+
+## Context
+The Design Document has been approved. Now you need to create detailed technical specifications that are testable and implementable.
+
+## Input
+
+### Design Document
+```
+$design_document
+```
+
+### Interview Summary
+```
+$interview_summary
+```
+
+## Your Task
+
+Create a Requirements Document (`requirements.md`) that breaks down the design into specific, testable requirements.
+
+## Required Sections
+
+### 1. Technical Specifications
+For each design requirement, create detailed technical requirements:
+
+```
+### REQ-XXX: [Requirement Title]
+**From Design**: FR-XXX
+**Description**: [Detailed technical requirement]
+**Acceptance Criteria**:
+- [ ] [Testable criterion 1]
+- [ ] [Testable criterion 2]
+```
+
+### 2. Interface Contracts
+- API endpoints with request/response schemas
+- Function signatures
+- Data models
+- Error codes
+
+### 3. Constraints
+- Performance limits
+- Security boundaries
+- Compatibility requirements
+- Edge cases
+
+### 4. Traceability Matrix
+Map each requirement back to design requirements:
+
+| Requirement | Design Source | Test Case(s) |
+|-------------|---------------|--------------|
+| REQ-001 | FR-001 | TC-001, TC-002 |
+
+## Quality Checks
+
+- [ ] Every requirement has acceptance criteria
+- [ ] All design requirements are covered
+- [ ] Interface contracts are complete
+- [ ] Edge cases are addressed
+- [ ] Each criterion is testable (has measurable outcome)
+
+## Output
+
+Save to: `specs/[project-name]/requirements.md`
+
+Follow format from `.opencode/skills/ears-format/SKILL.md`
