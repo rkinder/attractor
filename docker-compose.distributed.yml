@@ -1,0 +1,96 @@
+# Distributed deployment with multiple Attractor instances
+# Usage: docker-compose -f docker-compose.distributed.yml up
+
+services:
+  # Attractor instances (scalable)
+  attractor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: attractor:latest
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - ARTIFACTS_DIR=/app/data/artifacts
+      - LOGS_DIR=/app/logs
+      - CHECKPOINTS_DIR=/app/checkpoints
+      - COORDINATOR_ENABLED=true
+      - CORS_ORIGIN=*
+      - INSTANCE_ID=
+    volumes:
+      - attractor_data:/app/data
+      - attractor_logs:/app/logs
+      - attractor_checkpoints:/app/checkpoints
+      - ./workflows:/app/workflows:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - attractor_network
+
+  # Redis for state management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - attractor_network
+
+  # Nginx load balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${SERVER_PORT:-3000}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - attractor
+    networks:
+      - attractor_network
+
+# Named volumes with explicit driver for shared storage
+volumes:
+  attractor_data:
+    driver: local
+  attractor_logs:
+    driver: local
+  attractor_checkpoints:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  attractor_network:
+    driver: bridge

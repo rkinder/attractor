@@ -4,43 +4,45 @@
 
 ### Phase 1: Dockerfile
 
-- [ ] **TASK-001**: Create Dockerfile with multi-stage build
+- [x] **TASK-001**: Create Dockerfile with multi-stage build
   - Depends on: None
   - Files: `Dockerfile`
   - Estimated: 1 hour
 
-- [ ] **TASK-002**: Add .dockerignore file
+- [x] **TASK-002**: Add .dockerignore file
   - Depends on: TASK-001
   - Files: `.dockerignore`
   - Estimated: 15 minutes
 
-- [ ] **TASK-003**: Create .env.example for container deployment
+- [x] **TASK-003**: Create .env.example for container deployment
   - Depends on: None
   - Files: `.env.example`
   - Estimated: 15 minutes
 
 ### Phase 2: Docker Compose
 
-- [ ] **TASK-004**: Create docker-compose.yml
+- [x] **TASK-004**: Create docker-compose.yml
   - Depends on: TASK-001
   - Files: `docker-compose.yml`
   - Estimated: 1 hour
 
-- [ ] **TASK-005**: Add docker-compose.override.yml for local dev
+- [x] **TASK-005**: Add docker-compose.override.yml for local dev
   - Depends on: TASK-004
   - Files: `docker-compose.override.yml`
   - Estimated: 30 minutes
 
 ### Phase 3: Container Integration
 
-- [ ] **TASK-006**: Update server to support environment config
+- [x] **TASK-006**: Update server to support environment config
   - Depends on: None
   - Files: `src/server/config.js`
+  - Note: Already implemented in Phase 5a
   - Estimated: 30 minutes
 
-- [ ] **TASK-007**: Implement graceful shutdown
+- [x] **TASK-007**: Implement graceful shutdown
   - Depends on: None
   - Files: `src/server/index.js`
+  - Note: Already implemented in server/index.js
   - Estimated: 30 minutes
 
 ### Phase 4: Testing

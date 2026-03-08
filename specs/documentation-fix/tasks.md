@@ -2,48 +2,76 @@
 
 ## Phase 1: Source Code Analysis
 
-- [ ] **1.1** Read all source files in `src/` to inventory actual API
-- [ ] **1.2** Document all classes, methods, properties in a working note
-- [ ] **1.3** List all events and their actual payloads
-- [ ] **1.4** Identify gap between current docs and reality
+- [x] **1.1** Read all source files in `src/` to inventory actual API
+- [x] **1.2** Document all classes, methods, properties in a working note
+- [x] **1.3** List all events and their actual payloads
+- [x] **1.4** Identify gap between current docs and reality
+
+**Analysis Complete - Key Findings:**
+
+| Item | Status in Docs | Actual Implementation |
+|------|---------------|----------------------|
+| Attractor.create() | ✅ Correct | Static async method |
+| attractor.run() | ✅ Correct | Instance method |
+| attractor.runFromString() | ✅ Correct | Instance method |
+| attractor.resume() | ❌ Wrong signature | Takes (runId, options), not (checkpointPath) |
+| attractor.validate() | ❌ Doesn't exist | Not a public method |
+| attractor.once() | ❌ Doesn't exist | Not available |
+| attractor.off() | ❌ Doesn't exist | Not available |
+| attractor.emit() | ❌ Doesn't exist | Not available |
+| attractor.on() | ✅ Correct | Instance method |
+| attractor.registerHandler() | ✅ Correct | Instance method |
+| Attractor.listCheckpoints() | ✅ Correct | Static method |
+| Context.clear() | ❌ Doesn't exist | Remove from docs |
+| Context.toJSON() | ❌ Doesn't exist | Remove from docs |
+| Context.getObject() | ✅ Added | New method |
+| Context.getArray() | ✅ Added | New method |
+| Context.exportSession() | ✅ Added | New method |
+| Context.importSession() | ✅ Added | New method |
+| Outcome.fail() | ✅ Correct | Method name is fail (not failure) |
+| Outcome.notes | ✅ Correct | Property is notes (not message) |
+| node_execution_failure | ❌ Wrong name | Actual name: node_execution_failed |
 
 ---
 
 ## Phase 2: Core API Documentation (api-reference.md)
 
 ### Task 2.1: Attractor Class
-- [ ] **2.1.1** Rewrite constructor and create() section
-- [ ] **2.1.2** Document run(), on(), registerHandler() with correct signatures
-- [ ] **2.1.3** Remove fictional methods
-- [ ] **Estimated**: 2 hours
+- [x] **2.1.1** Rewrite constructor and create() section
+- [x] **2.1.2** Document run(), on(), registerHandler() with correct signatures
+- [x] **2.1.3** Remove fictional methods (validate, once, off, emit)
+- [x] **Estimated**: 2 hours
 
 ### Task 2.2: PipelineEngine Class  
-- [ ] **2.2.1** Document actual config options
-- [ ] **2.2.2** Document run() return value correctly
-- [ ] **Estimated**: 1 hour
+- [x] **2.2.1** Document actual config options
+- [x] **2.2.2** Document run() return value correctly
+- [x] **Estimated**: 1 hour
 
 ### Task 2.3: Context Class
-- [ ] **2.3.1** Rename to "Context" (not PipelineContext)
-- [ ] **2.3.2** Document only existing methods
-- [ ] **2.3.3** Remove clear() and toJSON()
-- [ ] **Estimated**: 1 hour
+- [x] **2.3.1** Document only existing methods
+- [x] **2.3.2** Remove clear() and toJSON() from docs
+- [x] **Estimated**: 1 hour
 
 ### Task 2.4: Outcome Class
-- [ ] **2.4.1** Fix method names (fail, not failure)
-- [ ] **2.4.2** Fix properties (notes, not message)
-- [ ] **2.4.3** Document StageStatus correctly
-- [ ] **Estimated**: 1 hour
+- [x] **2.4.1** Fix method names (fail, not failure)
+- [x] **2.4.2** Fix properties (notes, not message)
+- [x] **2.4.3** Document StageStatus correctly
+- [x] **Estimated**: 1 hour
 
 ### Task 2.5: Events Section
-- [ ] **2.5.1** Rewrite all event documentation with actual payloads
-- [ ] **2.5.2** Fix event name: node_execution_failed (not failure)
-- [ ] **2.5.3** Remove fictional events
-- [ ] **Estimated**: 2 hours
+- [x] **2.5.1** Rewrite all event documentation with actual payloads
+- [x] **2.5.2** Fix event name: node_execution_failed (not failure)
+- [x] **2.5.3** Remove fictional events (checkpoint_saved, checkpoint_loaded, context_updated)
+- [x] **Estimated**: 2 hours
 
 ### Task 2.6: Handler Classes
-- [ ] **2.6.1** Document all 9 handler types
-- [ ] **2.6.2** Add ParallelHandler, FanInHandler, MCPHandler, StackManagerLoopHandler
-- [ ] **Estimated**: 1 hour
+- [x] **2.6.1** Document all 9 handler types
+  - [x] StartHandler, ExitHandler, CodergenHandler
+  - [x] ConditionalHandler, WaitForHumanHandler
+  - [x] ToolHandler, ParallelHandler, FanInHandler
+  - [x] StackManagerLoopHandler
+- [x] **2.6.2** Add shape-to-handler mapping
+- [x] **Estimated**: 1 hour
 
 ---
 

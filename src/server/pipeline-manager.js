@@ -66,10 +66,21 @@ export class PipelineManager {
 
     try {
       // Execute pipeline asynchronously
-      const result = await this.attractor.run(execution.dotSource, {
+      // Use runFromString if content looks like DOT (starts with digraph/graph), otherwise treat as file path
+      const isDotContent = execution.dotSource.trim().startsWith('digraph') || 
+                          execution.dotSource.trim().startsWith('graph');
+      
+      const options = {
         logsRoot: `./logs/${id}`,
         autoApprove: execution.autoApprove
-      });
+      };
+      
+      let result;
+      if (isDotContent) {
+        result = await this.attractor.runFromString(execution.dotSource, options);
+      } else {
+        result = await this.attractor.run(execution.dotSource, options);
+      }
 
       if (execution.cancelled) {
         execution.status = PipelineStatus.CANCELLED;
@@ -164,6 +175,27 @@ export class PipelineManager {
     const connections = this.websockets.get(id);
     if (connections) {
       connections.delete(ws);
+    }
+  }
+
+  /**
+   * Broadcast a custom message to all WebSocket connections for a pipeline
+   * @param {string} id - Pipeline ID
+   * @param {Object} message - Message to broadcast
+   */
+  broadcastToPipeline(id, message) {
+    const connections = this.websockets.get(id);
+    if (!connections) return;
+
+    const messageStr = JSON.stringify(message);
+    for (const ws of connections) {
+      try {
+        if (ws.readyState === 1) { // WebSocket.OPEN
+          ws.send(messageStr);
+        }
+      } catch (error) {
+        console.error(`Error broadcasting to WebSocket: ${error.message}`);
+      }
     }
   }
 

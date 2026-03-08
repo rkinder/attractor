@@ -127,6 +127,122 @@ Cancel a running pipeline:
 }
 ```
 
+### Submit Clarification
+
+```
+POST /pipelines/:id/clarify
+```
+
+Submit an answer to a clarification question:
+
+**Request:**
+```json
+{
+  "question_id": "q_123_abc",
+  "answer": "The user wants to proceed with option A"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "nextAction": "resume"
+}
+```
+
+### Submit Approval
+
+```
+POST /pipelines/:id/approve
+```
+
+Submit an approval decision:
+
+**Request:**
+```json
+{
+  "decision": "proceed",  // "proceed", "revise", or "abort"
+  "notes": "Looks good, proceed with deployment"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "nextAction": "trigger_next"
+}
+```
+
+### Add Context
+
+```
+POST /pipelines/:id/context
+```
+
+Add additional context to a running pipeline:
+
+**Request:**
+```json
+{
+  "user_preference": "dark_mode",
+  "feature_flag_enabled": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+### Get Pending Questions
+
+```
+GET /pipelines/:id/questions
+```
+
+Get pending clarification questions for a pipeline:
+
+**Response:**
+```json
+{
+  "questions": [
+    {
+      "id": "q_123_abc",
+      "text": "Which option would you prefer?",
+      "stage": "analysis",
+      "timeout": 300000,
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+### Get Decision History
+
+```
+GET /pipelines/:id/decisions
+```
+
+Get coordinator decision history for a pipeline:
+
+**Response:**
+```json
+{
+  "decisions": [
+    {
+      "pipelineId": "pipeline-abc123",
+      "type": "complete",
+      "reason": "success",
+      "timestamp": "2024-01-15T10:30:05.000Z"
+    }
+  ]
+}
+```
+
 ### WebSocket Events
 
 ```
@@ -146,6 +262,56 @@ ws.on('message', (data) => {
 
 The server sends status updates whenever the pipeline status changes.
 
+#### Event Types
+
+**Pipeline Status:**
+```json
+{
+  "pipeline_id": "pipeline-abc123",
+  "status": "running",
+  "outcome_status": null
+}
+```
+
+**Coordinator Decision:**
+```json
+{
+  "type": "coordinator_decision",
+  "data": {
+    "pipelineId": "pipeline-abc123",
+    "type": "complete",
+    "reason": "success",
+    "timestamp": "2024-01-15T10:30:05.000Z"
+  }
+}
+```
+
+**Human Request:**
+```json
+{
+  "type": "human_request",
+  "data": {
+    "pipelineId": "pipeline-abc123",
+    "question": {
+      "id": "q_123",
+      "text": "Which option?"
+    },
+    "reason": "awaiting_clarification"
+  }
+}
+```
+
+**Workflow Triggered:**
+```json
+{
+  "type": "workflow_triggered",
+  "data": {
+    "pipelineId": "pipeline-abc123",
+    "nextWorkflow": "workflows/next-step.dot"
+  }
+}
+```
+
 ## Status Values
 
 | Status | Description |
@@ -155,6 +321,26 @@ The server sends status updates whenever the pipeline status changes.
 | `completed` | Finished successfully |
 | `failed` | Execution error |
 | `cancelled` | User cancelled |
+
+## Redis Integration
+
+The HTTP server can use Redis for state management and coordination:
+
+### Without Redis (Default)
+The server uses in-memory storage when Redis is unavailable.
+
+### With Redis
+Set environment variables to enable Redis:
+
+```bash
+REDIS_HOST=localhost REDIS_PORT=6379 node src/server/index.js
+```
+
+Redis enables:
+- Pipeline state persistence across restarts
+- Coordinator decision history
+- Cross-instance artifact metadata
+- Distributed deployment support
 
 ## Examples
 
@@ -214,6 +400,10 @@ ws.on('message', (data) => {
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 3000 | Server port |
+| `REDIS_HOST` | localhost | Redis host for state management |
+| `REDIS_PORT` | 6379 | Redis port |
+| `COORDINATOR_ENABLED` | false | Enable workflow coordinator |
+| `ARTIFACTS_DIR` | ./data/artifacts | Artifact storage path |
 
 ## Error Handling
 

@@ -83,14 +83,21 @@ Execute a workflow from DOT content string.
 
 **Returns:** Promise<ExecutionResult>
 
-#### `resume(checkpointPath)`
+#### `resume(runId, options?)`
 
-Resume execution from a checkpoint file.
+Resume execution from a checkpoint using run ID.
 
 **Parameters:**
-- `checkpointPath` (string): Path to checkpoint file
+- `runId` (string): The run ID to resume from (from logs directory)
+- `options` (object, optional): Execution options
 
 **Returns:** Promise<ExecutionResult>
+
+```javascript
+const result = await attractor.resume('run-abc123', {
+  timeout: 3600000
+});
+```
 
 #### `validate(dotFilePath)`
 
@@ -135,17 +142,11 @@ attractor.registerHandler('custom_type', new CustomHandler());
 
 Listen for pipeline events.
 
-##### `once(event, listener)`
-
-Listen for a single occurrence of an event.
-
-##### `off(event, listener)`
-
-Remove an event listener.
-
-##### `emit(event, data)`
-
-Emit an event (advanced usage).
+```javascript
+attractor.on('pipeline_complete', (data) => {
+  console.log('Pipeline finished:', data.runId);
+});
+```
 
 ## Events
 
@@ -158,9 +159,212 @@ Emitted when pipeline execution begins.
 ```javascript
 {
   runId: 'uuid-string',
-  dotFile: './path/to/workflow.dot',
-  timestamp: 1634567890123,
-  context: PipelineContext
+  dotFilePath: './path/to/workflow.dot',
+  logsDir: './logs/run-xxx'
+}
+```
+
+#### `pipeline_complete`
+Emitted when pipeline execution finishes successfully.
+
+**Data:**
+```javascript
+{
+  runId: 'uuid-string',
+  result: Outcome
+}
+```
+
+#### `pipeline_error`
+Emitted when pipeline execution encounters an error.
+
+**Data:**
+```javascript
+{
+  runId: 'uuid-string',
+  error: 'Error message'
+}
+```
+
+#### `pipeline_resume`
+Emitted when resuming from checkpoint.
+
+**Data:**
+```javascript
+{
+  runId: 'uuid-string',
+  checkpoint: '2024-01-15T10:00:00.000Z'
+}
+```
+
+#### `pipeline_resume_complete`
+Emitted when resume operation completes.
+
+**Data:**
+```javascript
+{
+  runId: 'uuid-string',
+  success: true,
+  resumedFrom: '2024-01-15T10:00:00.000Z'
+}
+```
+
+#### `pipeline_terminal`
+Emitted when pipeline reaches terminal node.
+
+**Data:**
+```javascript
+{
+  nodeId: 'exit-node'
+}
+```
+
+### Node Events
+
+#### `node_execution_start`
+Emitted when a node begins execution.
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node',
+  attempt: 1,
+  maxAttempts: 3
+}
+```
+
+#### `node_execution_success`
+Emitted when a node completes successfully.
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node',
+  outcome: Outcome
+}
+```
+
+#### `node_execution_failed`
+Emitted when a node fails (after exhausting retries).
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node',
+  error: 'Error message',
+  retryTarget?: 'node-to-retry'
+}
+```
+
+#### `node_execution_error`
+Emitted when a node throws an error.
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node',
+  error: 'Error message'
+}
+```
+
+#### `node_execution_retry`
+Emitted when a node will be retried.
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node',
+  attempt: 1,
+  reason: 'Retry reason'
+}
+```
+
+#### `node_execution_partial`
+Emitted when a node returns partial success.
+
+**Data:**
+```javascript
+{
+  nodeId: 'my-node'
+}
+```
+
+#### `edge_traversed`
+Emitted when moving from one node to another.
+
+**Data:**
+```javascript
+{
+  from: 'node1',
+  to: 'node2',
+  edge: { ... }
+}
+```
+
+#### `loop_restart`
+Emitted when a loop restarts (StackManagerLoopHandler).
+
+**Data:**
+```javascript
+{
+  nodeId: 'loop-node',
+  iteration: 2
+}
+```
+
+#### `goal_gate_retry`
+Emitted when a goal gate retries.
+
+**Data:**
+```javascript
+{
+  failedGoal: 'goal-node',
+  retryTarget: 'retry-node'
+}
+```
+
+### Condition & Validation Events
+
+#### `condition_error`
+Emitted when condition evaluation fails.
+
+**Data:**
+```javascript
+{
+  condition: 'some_condition',
+  error: 'Error message'
+}
+```
+
+#### `validation_warnings`
+Emitted when validation finds warnings.
+
+**Data:**
+```javascript
+{
+  warnings: ['Warning 1', 'Warning 2']
+}
+```
+
+#### `validation_complete`
+Emitted when validation completes.
+
+**Data:**
+```javascript
+{
+  valid: true,
+  errors: [],
+  warnings: []
+}
+```
+
+#### `stylesheet_loaded`
+Emitted when stylesheet is loaded.
+
+**Data:**
+```javascript
+{
+  stylesheet: ModelStylesheet
 }
 ```
 
@@ -220,18 +424,16 @@ Emitted when a node completes successfully.
 }
 ```
 
-#### `node_execution_failure`
-Emitted when a node fails.
+#### `node_execution_failed`
+Emitted when a node fails (exhausted retries).
 
 **Data:**
 ```javascript
 {
   runId: 'uuid-string',
   nodeId: 'my-node',
-  outcome: Outcome,
-  error: Error,
-  willRetry: true,
-  timestamp: 1634567890123
+  error: 'Error message',
+  retryTarget?: 'node-to-retry'
 }
 ```
 
@@ -318,23 +520,28 @@ Represents the result of node execution.
 
 ```javascript
 // Success outcome
-Outcome.success(message, data?)
+Outcome.success(notes, contextUpdates?)
 
 // Failure outcome  
-Outcome.failure(message, data?)
+Outcome.fail(failureReason, contextUpdates?)
+
+// Partial success outcome
+Outcome.partialSuccess(notes, contextUpdates?)
 
 // Retry outcome
-Outcome.retry(message, data?)
+Outcome.retry(reason, contextUpdates?)
 
 // Skip outcome
-Outcome.skip(message, data?)
+Outcome.skipped(notes, contextUpdates?)
 ```
 
 **Properties:**
-- `status`: 'success' | 'failure' | 'retry' | 'skip'
-- `message`: string
-- `data`: any (optional additional data)
-- `timestamp`: number
+- `status`: 'success' | 'partial_success' | 'retry' | 'fail' | 'skipped'
+- `preferred_label`: string - Label for next node suggestion
+- `suggested_next_ids`: string[] - Suggested next node IDs
+- `context_updates`: object - Updates to apply to context
+- `notes`: string - Human-readable notes
+- `failure_reason`: string - Reason for failure/retry
 
 ### PipelineContext
 
@@ -367,18 +574,76 @@ if (context.has('previous_result')) {
 }
 ```
 
-##### `delete(key)`
-Remove a key.
+##### `keys()`
+Get all context keys.
 
 ```javascript
-context.delete('temporary_data');
+const allKeys = context.keys();
 ```
 
-##### `clear()`
-Clear all context data.
+##### `getString(key, defaultValue?)`
+Get a value as string with default.
 
-##### `toJSON()`
-Serialize context to JSON.
+```javascript
+const name = context.getString('user_name', 'Anonymous');
+```
+
+##### `getNumber(key, defaultValue?)`
+Get a value as number with default.
+
+```javascript
+const count = context.getNumber('item_count', 0);
+```
+
+##### `getBoolean(key, defaultValue?)`
+Get a value as boolean with default.
+
+```javascript
+const enabled = context.getBoolean('feature_enabled', false);
+```
+
+##### `getObject(key, defaultValue?)`
+Get a value as object with default.
+
+```javascript
+const config = context.getObject('settings', {});
+```
+
+##### `getArray(key, defaultValue?)`
+Get a value as array with default.
+
+```javascript
+const items = context.getArray('items', []);
+```
+
+##### `exportSession()`
+Export full session state to JSON-serializable object.
+
+```javascript
+const session = context.exportSession();
+// Returns: { version, exportedAt, values, logs }
+```
+
+##### `importSession(sessionData)`
+Import session state from exported object.
+
+```javascript
+context.importSession(sessionData);
+```
+
+##### `getEnv(key, defaultValue?)`
+Get environment variable value.
+
+```javascript
+const apiKey = context.getEnv('API_KEY');
+```
+
+##### `appendLog(entry)`
+Add a log entry (with automatic secret masking).
+
+```javascript
+context.appendLog('Processing started');
+```
 
 ##### Built-in Context Keys
 
@@ -520,12 +785,43 @@ class CustomHandler extends Handler {
 
 ### Built-in Handlers
 
-- **StartHandler**: Pipeline entry point
-- **ExitHandler**: Pipeline termination  
-- **CodergenHandler**: LLM task execution
-- **ConditionalHandler**: Branching logic
-- **HumanHandler**: Human approval gates
-- **ToolHandler**: External tool execution
+Attractor includes 9 built-in handlers that are automatically registered:
+
+| Handler | Shape | Purpose |
+|---------|-------|---------|
+| **StartHandler** | `Mdiamond` | Pipeline entry point |
+| **ExitHandler** | `Msquare` | Pipeline termination |
+| **CodergenHandler** | `box` | LLM-powered task execution |
+| **ConditionalHandler** | `diamond` | Branching logic based on conditions |
+| **WaitForHumanHandler** | `hexagon` | Human approval/intervention gates |
+| **ToolHandler** | `parallelogram` | External tool execution (shell, code, etc.) |
+| **ParallelHandler** | `component` | Parallel branch execution (fan-out) |
+| **FanInHandler** | `tripleoctagon` | Branch consolidation (fan-in) |
+| **StackManagerLoopHandler** | `house` | Loop with stack management |
+
+#### Shape to Handler Mapping
+
+```javascript
+{
+  'Mdiamond': 'start',
+  'Msquare': 'exit',
+  'box': 'codergen',
+  'hexagon': 'wait.human',
+  'diamond': 'conditional',
+  'component': 'parallel',
+  'tripleoctagon': 'parallel.fan_in',
+  'parallelogram': 'tool',
+  'house': 'stack.manager_loop'
+}
+```
+
+#### Custom Handler Registration
+
+```javascript
+const attractor = await Attractor.create();
+
+attractor.registerHandler('custom', new MyCustomHandler());
+```
 
 ## Validation API
 

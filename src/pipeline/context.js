@@ -37,10 +37,69 @@ export class Context {
     return str === 'true' || str === '1' || str === 'yes';
   }
 
+  getObject(key, defaultValue = {}) {
+    const value = this.get(key);
+    if (value === null) return defaultValue;
+    if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) return defaultValue;
+      return value;
+    }
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // Not valid JSON
+      }
+    }
+    return defaultValue;
+  }
+
+  getArray(key, defaultValue = []) {
+    const value = this.get(key);
+    if (value === null) return defaultValue;
+    if (Array.isArray(value)) return value;
+    return defaultValue;
+  }
+
+  _getSecretPatterns() {
+    const patterns = [];
+    const secretSuffixes = ['_SECRET', '_KEY', '_TOKEN', '_PASSWORD'];
+    
+    for (const [key, value] of Object.entries(process.env)) {
+      const upperKey = key.toUpperCase();
+      const valueStr = String(value);
+      
+      for (const suffix of secretSuffixes) {
+        if (upperKey.endsWith(suffix) && valueStr) {
+          patterns.push({ pattern: valueStr, name: key });
+        }
+      }
+    }
+    
+    return patterns;
+  }
+
+  _maskSecrets(message) {
+    const patterns = this._getSecretPatterns();
+    let masked = message;
+    
+    for (const { pattern } of patterns) {
+      if (pattern && masked.includes(pattern)) {
+        masked = masked.split(pattern).join('******');
+      }
+    }
+    
+    return masked;
+  }
+
   appendLog(entry) {
+    const maskedMessage = this._maskSecrets(String(entry));
     this.logs.push({
       timestamp: new Date(),
-      message: entry
+      message: maskedMessage
     });
   }
 
@@ -50,6 +109,33 @@ export class Context {
       result[key] = value;
     }
     return result;
+  }
+
+  exportSession() {
+    return {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      values: this.snapshot(),
+      logs: [...this.logs]
+    };
+  }
+
+  importSession(sessionData) {
+    if (!sessionData || typeof sessionData !== 'object') {
+      throw new Error('Invalid session data: must be an object');
+    }
+    
+    if (!sessionData.values || typeof sessionData.values !== 'object') {
+      throw new Error('Invalid session data: missing or invalid values');
+    }
+    
+    this.values = new Map(Object.entries(sessionData.values));
+    
+    if (Array.isArray(sessionData.logs)) {
+      this.logs = [...sessionData.logs];
+    }
+    
+    return this;
   }
 
   clone() {

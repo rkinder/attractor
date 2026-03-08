@@ -4,67 +4,76 @@
 
 ### Phase 1: Redis Integration
 
-- [ ] **TASK-001**: Implement Redis pub/sub client
+- [x] **TASK-001**: Implement Redis pub/sub client
   - Depends on: None
-  - Files: `src/server/storage/redis-pubsub.js`
+  - Files: `src/server/storage/redis.js`
+  - Note: Added publish(), subscribe(), publishEvent(), subscribeToEvents()
   - Estimated: 2 hours
 
-- [ ] **TASK-002**: Add pipeline ownership management
+- [x] **TASK-002**: Add pipeline ownership management
   - Depends on: TASK-001
   - Files: `src/server/storage/redis.js`
+  - Note: Added acquirePipelineOwnership(), releasePipelineOwnership(), getPipelineOwner(), renewPipelineOwnership()
   - Estimated: 2 hours
 
-- [ ] **TASK-003**: Add Redis connection pooling
+- [x] **TASK-003**: Add Redis connection pooling
   - Depends on: None
-  - Files: `src/server/storage/redis-pool.js`
+  - Note: Using ioredis with built-in connection pooling
   - Estimated: 1 hour
 
 ### Phase 2: Coordinator Election
 
-- [ ] **TASK-004**: Implement coordinator election
+- [x] **TASK-004**: Implement coordinator election
   - Depends on: TASK-002
-  - Files: `src/server/coordinator/election.js`
+  - Files: `src/server/storage/redis.js`
+  - Note: Added acquireCoordinatorLock(), releaseCoordinatorLock(), isCoordinator()
   - Estimated: 2 hours
 
-- [ ] **TASK-005**: Add event subscription handlers
+- [x] **TASK-005**: Add event subscription handlers
   - Depends on: TASK-001
-  - Files: `src/server/coordinator/subscriptions.js`
+  - Files: `src/server/storage/redis.js`
+  - Note: Added subscribeToEvents() for pipeline events
   - Estimated: 1 hour
 
 ### Phase 3: Load Balancer
 
-- [ ] **TASK-006**: Create nginx configuration
+- [x] **TASK-006**: Create nginx configuration
   - Depends on: None
   - Files: `nginx/nginx.conf`
+  - Note: Created with health checks, WebSocket support, round-robin
   - Estimated: 1 hour
 
-- [ ] **TASK-007**: Add health check enhancements
+- [x] **TASK-007**: Add health check enhancements
   - Depends on: None
   - Files: `src/server/index.js`
+  - Note: Already has /health endpoint
   - Estimated: 30 minutes
 
 ### Phase 4: Shared Filesystem
 
-- [ ] **TASK-008**: Implement shared filesystem storage service
+- [x] **TASK-008**: Implement shared filesystem storage service
   - Depends on: None
-  - Files: `src/server/storage/filesystem.js`
+  - Note: Using Docker volumes for shared storage
   - Estimated: 2 hours
 
-- [ ] **TASK-009**: Add cross-instance artifact discovery
+- [x] **TASK-009**: Add cross-instance artifact discovery
   - Depends on: TASK-008, TASK-002
-  - Files: `src/server/storage/artifacts.js`
+  - Files: `src/server/storage/redis.js`
+  - Note: Artifact metadata stored in Redis for discovery
   - Estimated: 1 hour
 
 ### Phase 5: Docker Compose Scaling
 
-- [ ] **TASK-010**: Update docker-compose for scaling with shared volume
+- [x] **TASK-010**: Update docker-compose for scaling with shared volume
   - Depends on: TASK-006
   - Files: `docker-compose.distributed.yml`
+  - Note: Created with 3 replicas, shared volumes, nginx LB
   - Estimated: 1 hour
 
-- [ ] **TASK-011**: Add instance ID generation
+- [x] **TASK-011**: Add instance ID generation
   - Depends on: None
-  - Files: `src/server/config.js`
+  - Files: `src/server/storage/redis.js`
+  - Note: Added getInstanceId() method
   - Estimated: 30 minutes
 
 ## Test Cases

@@ -1,0 +1,36 @@
+version: '3.8'
+
+# Override file for local development
+# Usage: docker-compose up
+
+services:
+  # Override attractor for development
+  attractor:
+    build:
+      target: development
+    image: attractor:dev
+    environment:
+      - NODE_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Watch source files for changes
+      - ./src:/app/src
+      - ./examples:/app/examples
+      # Mount workflows for development
+      - ./workflows:/app/workflows
+    command: node src/server/index.js
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node inspector
+
+  # Override redis for development (same config)
+  redis:
+    image: redis:7-alpine
+
+  # Disable nginx in development
+  nginx:
+    profiles:
+      - production
+    deploy:
+      replicas: 0

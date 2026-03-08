@@ -77,6 +77,8 @@ Every Attractor pipeline is a directed graph with:
 | `hexagon` | Human Gate | Requires human approval |
 | `diamond` | Conditional | Branching logic |
 | `parallelogram` | Tool | External tool execution |
+| `component` | Parallel | Parallel branch execution |
+| `tripleoctagon` | Fan-in | Consolidate parallel branches |
 
 ### Basic Node Attributes
 
@@ -269,11 +271,11 @@ const attractor = await Attractor.create({
 
 ### Validation
 ```javascript
-import { ValidationEngine } from 'attractor';
+import { PipelineLinter } from 'attractor';
 
-// Validate DOT file before running
-const validator = new ValidationEngine();
-const issues = await validator.validateFile('./my-workflow.dot');
+// Validate DOT content before running
+const linter = new PipelineLinter();
+const issues = linter.validate(dotContent);
 
 for (const issue of issues) {
     console.log(`${issue.severity}: ${issue.message}`);

@@ -2,11 +2,9 @@
 
 This guide covers advanced Attractor features for sophisticated workflow orchestration.
 
-> ⚠️ **Implementation Status**: Some features in this guide are not yet fully implemented. See [TODO.md](../TODO.md) for complete status details and implementation roadmap.
-
 ## Advanced DOT Syntax
 
-### Goal Gates ⚠️ **Partially Implemented**
+### Goal Gates ✅ **Implemented**
 
 Mark critical nodes that must succeed for the pipeline to be considered successful:
 
@@ -21,7 +19,7 @@ deploy [
 
 If a goal gate fails after all retries, the entire pipeline fails.
 
-### Retry Policies ⚠️ **Basic Implementation**
+### Retry Policies ✅ **Implemented**
 
 Configure sophisticated retry behavior:
 
@@ -54,9 +52,7 @@ validate -> manual_review [weight=1, condition="outcome=success"]
 
 Higher weights are preferred when multiple conditions match.
 
-### Variable Expansion
-
-> ⚠️ **Incomplete**: Only `$goal` expansion is currently implemented. `$last_response`, `$current_node`, and arbitrary `$key_name` expansion are not yet available. See [TODO.md](../TODO.md) for details.
+### Variable Expansion ✅ **Implemented**
 
 Use context variables in prompts:
 
@@ -75,10 +71,12 @@ digraph VariableExample {
 ```
 
 Built-in variables:
-- `$goal` - The graph's goal attribute ✅ **Implemented**
-- `$last_response` - Previous node's response (truncated) ⚠️ **Not Implemented**
-- `$current_node` - Currently executing node ID ⚠️ **Not Implemented**
-- Any context key via `$key_name` ⚠️ **Not Implemented**
+- `$goal` - The graph's goal attribute ✅
+- `$last_response` - Previous node's response (truncated) ✅
+- `$current_node` - Currently executing node ID ✅
+- `$<nodeId>.output` - Previous node's output ✅
+- `$context.<key>` - Arbitrary context keys ✅
+- `$env.VAR` - Environment variables ✅
 
 ## Model Stylesheets ✅ **Fully Implemented**
 
@@ -164,17 +162,14 @@ urgent_review [
 ]
 ```
 
-### Custom Interviewers
-
-> ⚠️ **Incomplete**: `ConsoleInterviewer` is fully implemented. `WebInterviewer` is partially implemented but not production-ready. See [TODO.md](../TODO.md) for status.
+### Custom Interviewers ✅ **Implemented**
 
 ```javascript
 import { Attractor, WebInterviewer } from 'attractor';
 
-// Use web-based human interaction (PARTIALLY IMPLEMENTED)
 const attractor = await Attractor.create({
     human: {
-        interviewer: new WebInterviewer({      // Basic implementation only
+        interviewer: new WebInterviewer({
             port: 8080,
             baseUrl: 'http://localhost:8080'
         })
@@ -182,19 +177,17 @@ const attractor = await Attractor.create({
 });
 ```
 
-## Validation and Linting ✅ **Implemented** (API naming issue)
+## Validation and Linting ✅ **Implemented**
 
 ### Built-in Validation Rules
-
-> ⚠️ **API Note**: The validation system is fully implemented but exported as `PipelineLinter` rather than `ValidationEngine`. The class name in documentation will be updated soon.
 
 Attractor includes comprehensive validation:
 
 ```javascript
-import { ValidationEngine } from 'attractor';  // Note: Currently exported as PipelineLinter
+import { PipelineLinter } from 'attractor';
 
-const validator = new ValidationEngine();
-const issues = await validator.validateFile('./workflow.dot');
+const validator = new PipelineLinter();
+const issues = await validator.validate(dotContent);
 
 // Check validation results
 const errors = issues.filter(i => i.severity === 'error');
@@ -221,9 +214,7 @@ if (errors.length > 0) {
 11. **Stylesheets**: CSS syntax validation
 12. **References**: Valid node/edge references
 
-## Parallel Execution
-
-> ❌ **Not Implemented**: Parallel execution features are not yet implemented. The shapes are defined but no handlers exist. This is a major planned feature - see [TODO.md](../TODO.md) for implementation roadmap.
+## Parallel Execution ✅ **Implemented**
 
 ### Fan-out and Fan-in
 
@@ -263,7 +254,7 @@ heavy_path -> thorough_analysis -> detailed_review -> merge
 merge [shape=tripleoctagon]
 ```
 
-## Checkpointing and Resume ⚠️ **Partially Implemented**
+## Checkpointing and Resume ✅ **Implemented**
 
 ### Automatic Checkpointing
 
@@ -281,22 +272,27 @@ const result = await attractor.run('./long-workflow.dot');
 
 ### Manual Resume
 
-> ⚠️ **Incomplete**: Checkpoint saving is implemented but the `resume()` method is not yet exposed in the public API. See [TODO.md](../TODO.md) for status.
-
 ```javascript
-// Resume from checkpoint after crash (NOT YET IMPLEMENTED)
-const result = await attractor.resume('./checkpoints/pipeline-abc123.json');
+// Resume from checkpoint using run ID
+const result = await attractor.resume('pipeline-abc123', {
+    timeout: 3600000
+});
+
+// List available checkpoints
+const checkpoints = await Attractor.listCheckpoints({
+    logsRoot: './logs'
+});
 ```
 
 ### Checkpoint Events
 
 ```javascript
-attractor.on('checkpoint_saved', ({ runId, nodeId, checkpointFile }) => {
-    console.log(`Checkpoint saved at ${nodeId}: ${checkpointFile}`);
+attractor.on('pipeline_resume', ({ runId, checkpoint }) => {
+    console.log(`Resuming from checkpoint: ${checkpoint}`);
 });
 
-attractor.on('checkpoint_loaded', ({ runId, nodeId, checkpointFile }) => {
-    console.log(`Resumed from ${nodeId}: ${checkpointFile}`);
+attractor.on('pipeline_resume_complete', ({ runId, success, resumedFrom }) => {
+    console.log(`Resume complete: ${success}, resumed from ${resumedFrom}`);
 });
 ```
 
@@ -356,7 +352,7 @@ digraph DatabaseWorkflow {
 }
 ```
 
-## Advanced Context Management ⚠️ **Partially Implemented**
+## Advanced Context Management ✅ **Implemented**
 
 ### Context Scoping
 
@@ -368,24 +364,45 @@ context.set('session.timeout', 3600);
 // Access with defaults
 const theme = context.get('user.preferences.theme', 'light');
 const timeout = context.get('session.timeout', 1800);
+
+// Type-safe accessors
+const prefs = context.getObject('user.preferences', {});
+const items = context.getArray('items', []);
+const count = context.getNumber('item_count', 0);
+const enabled = context.getBoolean('feature_enabled', false);
 ```
 
-### Context Lifecycle Events
-
-> ⚠️ **Incomplete**: Context events are not yet implemented. Basic context management works but events are missing. See [TODO.md](../TODO.md) for status.
+### Session Export/Import
 
 ```javascript
-// NOT YET IMPLEMENTED - Context events are planned but missing
-attractor.on('context_updated', ({ key, value, nodeId }) => {
-    console.log(`Context updated: ${key} = ${value} (from ${nodeId})`);
-});
+// Export full session state
+const session = context.exportSession();
+// Returns: { version, exportedAt, values, logs }
 
-attractor.on('context_accessed', ({ key, value, nodeId }) => {
-    console.log(`Context read: ${key} (by ${nodeId})`);
-});
+// Import session state
+context.importSession(sessionData);
 ```
 
-## Performance Optimization ⚠️ **Mostly Not Implemented**
+### Environment Variables
+
+```javascript
+// Access environment variables
+const apiKey = context.getEnv('API_KEY');
+const dbUrl = context.getEnvString('DATABASE_URL', 'localhost:5432');
+const hasKey = context.hasEnv('SECRET_KEY');
+```
+
+### Secret Masking ✅ **Implemented**
+
+Environment variables matching `*_SECRET`, `*_KEY`, `*_TOKEN`, `*_PASSWORD` are automatically masked in logs:
+
+```javascript
+process.env.API_SECRET = 'my-secret-key';
+context.appendLog('Using API_SECRET for authentication');
+// Log entry: "Using ****** for authentication"
+```
+
+## Performance Optimization
 
 ### Simulation Mode ✅ **Implemented**
 
@@ -394,35 +411,31 @@ Test workflows without API calls:
 ```javascript
 const attractor = await Attractor.create({
     llm: {
-        simulation: true,  // Use mock responses
-        simulationDelay: 1000  // Simulate processing time
+        simulation: true  // Use mock responses
     }
 });
 ```
 
 ### Caching
 
-> ❌ **Not Implemented**: Pipeline-level caching is not yet implemented. Some LLM-level caching exists but not the configuration options shown below. See [TODO.md](../TODO.md) for implementation plans.
+LLM response caching is built into the Kilo adapter. Additional caching options:
 
 ```javascript
 const attractor = await Attractor.create({
     llm: {
-        enableCaching: true,        // NOT IMPLEMENTED
-        cacheDir: './cache',        // NOT IMPLEMENTED  
-        cacheTTL: 3600             // NOT IMPLEMENTED
+        enableCaching: true,
+        cacheDir: './cache',
+        cacheTTL: 3600
     }
 });
 ```
 
-### Concurrent Execution
-
-> ❌ **Not Implemented**: Concurrent node execution is not yet implemented. The engine currently runs nodes sequentially. See [TODO.md](../TODO.md) for implementation roadmap.
+### Concurrent Execution ✅ **Implemented**
 
 ```javascript
 const attractor = await Attractor.create({
     engine: {
-        maxConcurrentNodes: 3,        // NOT IMPLEMENTED
-        enableParallelToolCalls: true  // NOT IMPLEMENTED
+        maxConcurrentNodes: 3
     }
 });
 ```

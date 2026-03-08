@@ -8,9 +8,14 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import { EventEmitter } from 'events';
 import { PipelineManager } from './pipeline-manager.js';
+import { redisStorage } from './storage/redis.js';
+import { coordinatorService } from './coordinator.js';
+import config from './config.js';
 
 const app = express();
+const eventEmitter = new EventEmitter();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -103,6 +108,85 @@ app.post('/pipelines/:id/cancel', (req, res) => {
   }
 });
 
+// Human intervention: Submit clarification
+app.post('/pipelines/:id/clarify', async (req, res) => {
+  try {
+    const { question_id, answer } = req.body;
+    
+    if (!question_id || answer === undefined) {
+      return res.status(400).json({ error: 'question_id and answer are required' });
+    }
+
+    const result = await coordinatorService.answerQuestion(req.params.id, question_id, answer);
+    
+    if (!result.success) {
+      return res.status(404).json({ error: result.error });
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Human intervention: Submit approval
+app.post('/pipelines/:id/approve', async (req, res) => {
+  try {
+    const { decision, notes } = req.body;
+    
+    if (!decision || !['proceed', 'revise', 'abort'].includes(decision)) {
+      return res.status(400).json({ error: 'decision must be proceed, revise, or abort' });
+    }
+
+    const result = await coordinatorService.submitApproval(req.params.id, decision, notes);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Human intervention: Add context
+app.post('/pipelines/:id/context', async (req, res) => {
+  try {
+    const contextUpdates = req.body;
+    
+    if (!contextUpdates || typeof contextUpdates !== 'object') {
+      return res.status(400).json({ error: 'context updates object required' });
+    }
+
+    const result = await coordinatorService.addContext(req.params.id, contextUpdates);
+    
+    if (!result.success) {
+      return res.status(404).json({ error: result.error });
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Human intervention: Get pending questions
+app.get('/pipelines/:id/questions', async (req, res) => {
+  try {
+    const questions = await coordinatorService.getQuestions(req.params.id);
+    res.json({ questions });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Coordinator decisions
+app.get('/pipelines/:id/decisions', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '100', 10);
+    const decisions = await coordinatorService.getDecisionHistory(req.params.id, limit);
+    res.json({ decisions });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Create HTTP server
 const server = createServer(app);
 
@@ -154,6 +238,9 @@ async function shutdown() {
   // Cancel all running pipelines
   await pipelineManager.cancelAll();
   
+  // Close Redis connection
+  await redisStorage.disconnect();
+  
   // Close WebSocket server
   wss.close(() => {
     console.log('WebSocket server closed');
@@ -175,12 +262,37 @@ async function shutdown() {
 // Start server
 async function start() {
   try {
+    // Initialize Redis storage
+    await redisStorage.connect();
+    
+    // Set up coordinator with event emitter
+    coordinatorService.setEventEmitter(eventEmitter);
+    
     // Initialize pipeline manager
     await pipelineManager.initialize();
+    
+    // Set up coordinator event forwarding to WebSockets
+    eventEmitter.on('coordinator_decision', (decision) => {
+      const execution = pipelineManager.get(decision.pipelineId);
+      if (execution) {
+        pipelineManager.broadcastToPipeline(decision.pipelineId, {
+          type: 'coordinator_decision',
+          data: decision
+        });
+      }
+    });
+
+    eventEmitter.on('human_request', (data) => {
+      pipelineManager.broadcastToPipeline(data.pipelineId, {
+        type: 'human_request',
+        data
+      });
+    });
     
     server.listen(PORT, () => {
       console.log(`Attractor server running on http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
+      console.log(`Redis: ${redisStorage.isConnected() ? 'connected' : 'using in-memory fallback'}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
