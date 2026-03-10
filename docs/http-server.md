@@ -322,25 +322,28 @@ The server sends status updates whenever the pipeline status changes.
 | `failed` | Execution error |
 | `cancelled` | User cancelled |
 
-## Redis Integration
+## Storage
 
-The HTTP server can use Redis for state management and coordination:
+The HTTP server uses filesystem-based storage for state management:
 
-### Without Redis (Default)
-The server uses in-memory storage when Redis is unavailable.
+### Data Locations
+- `data/state/` - Pipeline state and metadata
+- `data/artifacts/` - Pipeline artifacts
+- `logs/` - Execution logs
+- `checkpoints/` - Checkpoint files
 
-### With Redis
-Set environment variables to enable Redis:
+### Configuration
+Storage paths can be customized via environment variables:
 
 ```bash
-REDIS_HOST=localhost REDIS_PORT=6379 node src/server/index.js
+STATE_DIR=./data/state
+ARTIFACTS_DIR=./data/artifacts
+LOGS_DIR=./logs
+CHECKPOINTS_DIR=./checkpoints
 ```
 
-Redis enables:
-- Pipeline state persistence across restarts
-- Coordinator decision history
-- Cross-instance artifact metadata
-- Distributed deployment support
+### Distributed Deployment
+For multi-instance deployments, use a shared filesystem (NFS, EFS, etc.) mounted at the same path on all instances.
 
 ## Examples
 
@@ -400,10 +403,11 @@ ws.on('message', (data) => {
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 3000 | Server port |
-| `REDIS_HOST` | localhost | Redis host for state management |
-| `REDIS_PORT` | 6379 | Redis port |
-| `COORDINATOR_ENABLED` | false | Enable workflow coordinator |
+| `STATE_DIR` | ./data/state | State storage directory |
 | `ARTIFACTS_DIR` | ./data/artifacts | Artifact storage path |
+| `LOGS_DIR` | ./logs | Logs directory |
+| `CHECKPOINTS_DIR` | ./checkpoints | Checkpoints directory |
+| `COORDINATOR_ENABLED` | false | Enable workflow coordinator |
 
 ## Error Handling
 

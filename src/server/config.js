@@ -17,30 +17,16 @@ const defaults = {
     port: 3000,
     env: process.env.NODE_ENV || 'development'
   },
-  redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
-    password: process.env.REDIS_PASSWORD || undefined,
-    db: parseInt(process.env.REDIS_DB || '0', 10),
-    enableReadyCheck: true,
-    maxRetriesPerRequest: 3,
-    connectTimeout: 10000,
-    lazyConnect: true
-  },
   storage: {
+    baseDir: process.env.STATE_DIR || path.join(process.cwd(), 'data'),
     artifactsDir: process.env.ARTIFACTS_DIR || path.join(process.cwd(), 'data', 'artifacts'),
     logsDir: process.env.LOGS_DIR || path.join(process.cwd(), 'logs'),
-    checkpointsDir: process.env.CHECKPOINTS_DIR || path.join(process.cwd(), 'checkpoints')
-  },
-  queue: {
-    triggerQueue: 'workflow:triggers',
-    processingDelay: 100,
-    maxRetries: 3
+    checkpointsDir: process.env.CHECKPOINTS_DIR || path.join(process.cwd(), 'checkpoints'),
+    stateDir: process.env.STATE_DIR || path.join(process.cwd(), 'data', 'state')
   },
   coordinator: {
     enabled: process.env.COORDINATOR_ENABLED === 'true',
-    decisionHistoryTTL: 86400 * 7,
-    pipelineStateTTL: 86400
+    decisionHistoryDays: 7
   },
   artifacts: {
     maxSize: parseInt(process.env.MAX_ARTIFACT_SIZE || '10485760', 10),
@@ -97,16 +83,8 @@ class Config {
     return { ...this._config.server };
   }
 
-  getRedis() {
-    return { ...this._config.redis };
-  }
-
   getStorage() {
     return { ...this._config.storage };
-  }
-
-  getQueue() {
-    return { ...this._config.queue };
   }
 
   getCoordinator() {

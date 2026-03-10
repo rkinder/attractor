@@ -10,7 +10,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { EventEmitter } from 'events';
 import { PipelineManager } from './pipeline-manager.js';
-import { redisStorage } from './storage/redis.js';
+import { fileStorage } from './storage/filesystem.js';
 import { coordinatorService } from './coordinator.js';
 import config from './config.js';
 
@@ -238,9 +238,6 @@ async function shutdown() {
   // Cancel all running pipelines
   await pipelineManager.cancelAll();
   
-  // Close Redis connection
-  await redisStorage.disconnect();
-  
   // Close WebSocket server
   wss.close(() => {
     console.log('WebSocket server closed');
@@ -262,8 +259,8 @@ async function shutdown() {
 // Start server
 async function start() {
   try {
-    // Initialize Redis storage
-    await redisStorage.connect();
+    // Initialize filesystem storage
+    await fileStorage.initialize();
     
     // Set up coordinator with event emitter
     coordinatorService.setEventEmitter(eventEmitter);
@@ -292,7 +289,7 @@ async function start() {
     server.listen(PORT, () => {
       console.log(`Attractor server running on http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
-      console.log(`Redis: ${redisStorage.isConnected() ? 'connected' : 'using in-memory fallback'}`);
+      console.log(`Storage: filesystem at ${config.getStorage().baseDir}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

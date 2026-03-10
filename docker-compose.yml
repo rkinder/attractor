@@ -1,5 +1,5 @@
-# Attractor Stack with Redis
-# Usage: docker-compose up
+# Attractor Stack - Single container deployment
+# Usage: docker compose up
 
 services:
   # Attractor Server
@@ -14,14 +14,12 @@ services:
       - "${SERVER_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - STATE_DIR=/app/data/state
       - ARTIFACTS_DIR=/app/data/artifacts
       - LOGS_DIR=/app/logs
       - CHECKPOINTS_DIR=/app/checkpoints
       - COORDINATOR_ENABLED=${COORDINATOR_ENABLED:-true}
-      - CORS_ORIGIN=${CORS_ORIGEN:-*}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - KILO_API_KEY=${KILO_API_KEY:-}
@@ -31,9 +29,6 @@ services:
       - attractor_logs:/app/logs
       - attractor_checkpoints:/app/checkpoints
       - ./workflows:/app/workflows:ro
-    depends_on:
-      redis:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
@@ -41,29 +36,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - attractor_network
 
-  # Redis for state management
-  redis:
-    image: redis:7-alpine
-    container_name: attractor_redis
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 5s
-    networks:
-      - attractor_network
-
-  # Optional: Nginx reverse proxy for load balancing
+  # Optional: Nginx reverse proxy
   nginx:
     image: nginx:alpine
     container_name: attractor_nginx
@@ -75,8 +49,6 @@ services:
     depends_on:
       - attractor
     restart: unless-stopped
-    networks:
-      - attractor_network
 
 # Named volumes for data persistence
 volumes:
@@ -86,9 +58,3 @@ volumes:
     driver: local
   attractor_checkpoints:
     driver: local
-  redis_data:
-    driver: local
-
-networks:
-  attractor_network:
-    driver: bridge

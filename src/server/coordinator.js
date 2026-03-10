@@ -3,7 +3,7 @@
  * Listens to pipeline events and determines next actions
  */
 
-import redisStorage from './storage/redis.js';
+import fileStorage from './storage/filesystem.js';
 import config from './config.js';
 import { StageStatus } from '../pipeline/outcome.js';
 
@@ -79,7 +79,7 @@ class CoordinatorService {
   }
 
   async _makeDecision(pipelineId, result) {
-    const state = await redisStorage.getPipelineState(pipelineId);
+    const state = await fileStorage.getPipelineState(pipelineId);
     const workflowId = state?.workflowId || 'default';
     
     const rule = this.workflowRules.get(workflowId);
@@ -147,7 +147,7 @@ class CoordinatorService {
   }
 
   async _recordDecision(pipelineId, decision) {
-    await redisStorage.addDecision({
+    await fileStorage.addDecision({
       pipelineId,
       ...decision
     });
@@ -240,7 +240,7 @@ class CoordinatorService {
   }
 
   async addContext(pipelineId, contextUpdates) {
-    const state = await redisStorage.getPipelineState(pipelineId);
+    const state = await fileStorage.getPipelineState(pipelineId);
     
     if (!state) {
       return { success: false, error: 'Pipeline not found' };
@@ -256,13 +256,13 @@ class CoordinatorService {
     };
 
     const ttl = config.getCoordinator().pipelineStateTTL;
-    await redisStorage.setPipelineState(pipelineId, updatedState, ttl);
+    await fileStorage.setPipelineState(pipelineId, updatedState, ttl);
 
     return { success: true };
   }
 
   async getDecisionHistory(pipelineId, limit = 100) {
-    const allDecisions = await redisStorage.getDecisions(limit * 2);
+    const allDecisions = await fileStorage.getDecisions(limit * 2);
     return allDecisions.filter(d => d.pipelineId === pipelineId).slice(0, limit);
   }
 
@@ -275,13 +275,13 @@ class CoordinatorService {
     };
 
     const ttl = config.getCoordinator().pipelineStateTTL;
-    await redisStorage.setPipelineState(pipelineId, state, ttl);
+    await fileStorage.setPipelineState(pipelineId, state, ttl);
     
     return state;
   }
 
   async updatePipelineState(pipelineId, updates) {
-    const state = await redisStorage.getPipelineState(pipelineId);
+    const state = await fileStorage.getPipelineState(pipelineId);
     
     if (!state) {
       return null;
@@ -294,7 +294,7 @@ class CoordinatorService {
     };
 
     const ttl = config.getCoordinator().pipelineStateTTL;
-    await redisStorage.setPipelineState(pipelineId, updatedState, ttl);
+    await fileStorage.setPipelineState(pipelineId, updatedState, ttl);
     
     return updatedState;
   }
