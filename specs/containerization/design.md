@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document specifies the containerization of the Attractor project for deployment in containerized environments. The design enables running Attractor as part of a Docker Compose stack with Redis for state and shared filesystem for artifacts.
+This document specifies the containerization of the Attractor project for deployment in containerized environments. The design enables running Attractor as a single container with filesystem-based state storage.
 
 ## Architecture
 
@@ -10,18 +10,18 @@ This document specifies the containerization of the Attractor project for deploy
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Docker Compose                        │
-├─────────────┬─────────────┬─────────────────────────────┤
-│  attractor  │   redis     │  (optional) nginx/lb       │
-│  container  │   container │                             │
-└─────────────┴─────────────┴─────────────────────────────┘
+├─────────────────────────────────────────────────────────┤
+│  attractor  │  (optional) nginx/lb                     │
+│  container  │                                          │
+└─────────────────────────────────────────────────────────┘
 
 # For distributed:
 ┌─────────────────────────────────────────────────────────┐
 │                    Docker Compose                        │
-├─────────────┬─────────────┬─────────────┬───────────────┤
-│  attractor  │   redis     │  artifacts  │  nginx       │
-│  (scaled)   │   container │  volume     │  (lb)        │
-└─────────────┴─────────────┴─────────────┴───────────────┘
+├─────────────────────────────────────────────────────────┼────────────────┐
+│  attractor  │  artifacts volume  │  nginx/lb            │  (shared FS)   │
+│  (scaled)   │  (NFS/EFS)       │                      │               │
+└─────────────────────────────────────────────────────────┴────────────────┘
 ```
 
 ### Image Details
@@ -29,17 +29,20 @@ This document specifies the containerization of the Attractor project for deploy
 **attractor:latest**
 - Base: node:20-alpine
 - Port: 3000
-- Volumes: ./logs, ./data/artifacts, ./workflows
+- Volumes: ./logs, ./data, ./checkpoints, ./workflows
 - Environment: Configured via .env
 
 ### Data Storage
 
-| Data Type | Storage | Container |
-|-----------|---------|-----------|
-| Pipeline state | Redis | redis |
-| Artifact files | Filesystem | attractor (shared volume) |
-| Logs | Filesystem | attractor |
-| Workflows | Filesystem | attractor |
+| Data Type | Storage | Notes |
+|-----------|---------|-------|
+| Pipeline state | Filesystem | data/state/ |
+| Artifact files | Filesystem | data/artifacts/ |
+| Logs | Filesystem | logs/ |
+| Checkpoints | Filesystem | checkpoints/ |
+| Workflows | Filesystem | mounted read-only |
+
+For distributed deployments, use a shared filesystem (NFS, EFS, etc.) mounted at the same path on all instances.
 
 ## Functional Requirements
 
@@ -50,61 +53,39 @@ This document specifies the containerization of the Attractor project for deploy
 
 ### FR-002: Docker Compose Stack
 **Type**: Ubiquitous
-**Statement**: The system SHALL include docker-compose.yml that defines the full stack.
-**Rationale**: Enables one-command deployment
+**Statement**: The system SHALL include docker-compose.yml for easy deployment.
+**Rationale**: Simplifies local development and testing
 
 ### FR-003: Health Checks
-**Type**: Event-driven
-**Statement**: WHEN the container starts, the system SHALL verify Redis connectivity before accepting traffic.
-**Rationale**: Ensures healthy startup
-
-### FR-004: Persistent Data
 **Type**: Ubiquitous
-**Statement**: The system SHALL persist logs, artifacts, and workflow files across container restarts via named volumes.
-**Rationale**: Enables stateful operation
+**Statement**: The container SHALL expose a /health endpoint for container orchestration.
+**Rationale**: Enables container orchestration health monitoring
 
-### FR-005: Environment Configuration
+### FR-004: Volume Persistence
 **Type**: Ubiquitous
-**Statement**: The container SHALL accept configuration via environment variables.
-**Rationale**: Enables flexible deployment
+**Statement**: Pipeline data SHALL persist across container restarts via named volumes.
+**Rationale**: Enables stateful workflows
 
-### FR-006: Graceful Shutdown
-**Type**: Event-driven
-**Statement**: WHEN SIGTERM is received, the container SHALL complete running pipelines before exiting.
-**Rationale**: Prevents data corruption
-
-### FR-007: Shared Artifact Volume
+### FR-005: Graceful Shutdown
 **Type**: Ubiquitous
-**Statement**: The system SHALL support shared filesystem volume for artifact storage across multiple instances.
-**Rationale**: Enables distributed deployment
+**Statement**: The container SHALL handle SIGTERM for graceful shutdown.
+**Rationale**: Prevents data loss during deployments
 
 ## Non-Functional Requirements
 
 ### NFR-001: Image Size
-**Statement**: The container image SHALL be under 300MB.
-**Rationale**: Enables fast deployment
+**Statement**: The image SHALL be under 300MB.
+**Rationale**: Fast deployment and startup
 
-### NFR-002: Startup Time
-**Statement**: The container SHALL start and pass health check within 10 seconds.
-**Rationale**: Enables rapid scaling
-
-### NFR-003: Security
+### NFR-002: Security
 **Statement**: The container SHALL run as non-root user.
-**Rationale**: Follows container security best practices
+**Rationale**: Security best practice
 
-### NFR-004: Multi-platform
-**Statement**: The Dockerfile SHOULD support amd64 and arm64 architectures.
-**Rationale**: Enables deployment on various hardware
+### NFR-003: Simplicity
+**Statement**: No external dependencies (Redis, etc.) required for basic operation.
+**Rationale**: Simpler deployment and operation
 
 ## Dependencies
 
 - Node.js 20 (Alpine)
-- Redis (container)
-- Shared filesystem (Docker named volume or NFS)
-
-## Open Questions
-
-1. Should we use a multi-stage build for smaller image?
-2. How to handle LLM API keys in containers?
-3. Should we provide pre-built official images?
-4. What shared filesystem solution for production? (NFS, EFS, etc.)
+- No external services required

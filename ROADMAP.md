@@ -216,16 +216,13 @@ All major features implemented! ✅
 
 Implemented (March 2026):
 - ✅ Config module (`src/server/config.js`) with environment variable support
-- ✅ Redis storage (`src/server/storage/redis.js`) with fallback to in-memory
+- ✅ Filesystem storage (`src/server/storage/filesystem.js`) - JSON file-based
 - ✅ CoordinatorService (`src/server/coordinator.js`) for workflow chaining
 - ✅ Human intervention API endpoints (/clarify, /approve, /context, /questions)
 - ✅ Coordinator WebSocket events for real-time updates
-- ✅ Pipeline state persistence in Redis
-- ✅ Decision history in Redis
-- ✅ Pub/sub for event distribution
-- ✅ Pipeline ownership management
-- ✅ Instance heartbeat and discovery
-- ✅ Coordinator election via Redis locks
+- ✅ Pipeline state persistence in filesystem
+- ✅ Decision history in filesystem
+- ✅ No external dependencies (simpler deployment)
 
 ---
 

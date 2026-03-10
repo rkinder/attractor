@@ -7,111 +7,86 @@
 **Description**: Create Dockerfile for Attractor service
 
 **Acceptance Criteria**:
-- [ ] Based on node:20-alpine
-- [ ] Working directory set to /app
-- [ ] Dependencies installed via npm
-- [ ] Non-root user created and used
-- [ ] Exposes port 3000
-- [ ] CMD starts the server
+- [x] Based on node:20-alpine
+- [x] Working directory set to /app
+- [x] Dependencies installed via npm
+- [x] Non-root user created and used
+- [x] Exposes port 3000
+- [x] CMD starts the server
 
 ### REQ-002: Docker Compose Configuration
 **From Design**: FR-002
 **Description**: Create docker-compose.yml with full stack
 
 **Acceptance Criteria**:
-- [ ] Attractor service defined
-- [ ] Redis service defined
-- [ ] Volumes configured for persistence
-- [ ] Health checks defined
-- [ ] Environment variables configurable
-- [ ] Networks defined for service communication
+- [x] Attractor service defined
+- [x] Volumes configured for persistence
+- [x] Health checks defined
+- [x] Environment variables configurable
 
 ### REQ-003: Health Check Implementation
 **From Design**: FR-003
 **Description**: Add health check endpoint and compose configuration
 
 **Acceptance Criteria**:
-- [ ] /health endpoint returns 200 when ready
-- [ ] Redis ping implemented
-- [ ] Docker healthcheck configured
-- [ ] Startup probe configured
+- [x] /health endpoint returns 200 when ready
+- [x] Docker healthcheck configured
+- [x] Startup probe configured
 
 ### REQ-004: Volume Configuration
 **From Design**: FR-004
 **Description**: Configure persistent volumes
 
 **Acceptance Criteria**:
-- [ ] Logs directory mounted
-- [ ] Artifacts directory mounted (data/artifacts)
-- [ ] Workflows directory mounted
-- [ ] Named volumes for persistence
+- [x] Logs directory mounted
+- [x] Data directory mounted (state, artifacts)
+- [x] Checkpoints directory mounted
+- [x] Workflows directory mounted
+- [x] Named volumes for persistence
 
 ### REQ-005: Environment Configuration
 **From Design**: FR-005
 **Description**: Support environment-based configuration
 
 **Acceptance Criteria**:
-- [ ] All config via environment variables
-- [ ] .env.example provided
-- [ ] Default values for optional vars
-- [ ] Secrets not in image
+- [x] All config via environment variables
+- [x] .env.example provided
+- [x] Default values for optional vars
+- [x] Secrets not in image
 
 ### REQ-006: Graceful Shutdown Handler
 **From Design**: FR-006
 **Description**: Handle SIGTERM for clean shutdown
 
 **Acceptance Criteria**:
-- [ ] SIGTERM handler registered
-- [ ] Running pipelines allowed to complete
-- [ ] Timeout (30s) after which force exit
-- [ ] Exit code reflects state
+- [x] SIGTERM handler registered
+- [x] Running pipelines allowed to complete
+- [x] Timeout (10s) after which force exit
 
 ### REQ-007: Build Optimization
 **From Design**: NFR-001
 **Description**: Optimize Docker build
 
 **Acceptance Criteria**:
-- [ ] Multi-stage build used
-- [ ] Dependencies cached
-- [ ] Production build only
-- [ ] Image under 300MB
+- [x] Multi-stage build used
+- [x] Dependencies cached
+- [x] Production build only
+- [x] Image under 300MB
 
 ### REQ-008: Shared Volume Support
 **From Design**: FR-007
 **Description**: Configure shared volume for artifacts in distributed setup
 
 **Acceptance Criteria**:
-- [ ] Named volume for artifacts
-- [ ] Volume mount configurable
-- [ ] Support for NFS/external storage
-- [ ] Permissions allow read/write
+- [x] Named volume for data
+- [x] Volume mount configurable
+- [x] Support for NFS/external storage
+- [x] Permissions allow read/write
 
 ## Interface Contracts
 
-### Dockerfile Structure
-```dockerfile
-# Build stage
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-# Runtime stage
-FROM node:20-alpine
-WORKDIR /app
-COPY --from=builder /app/node_modules ./node_modules
-COPY . .
-RUN addgroup -g 1001 -S attractor && \
-    adduser -u 1001 -S attractor -G attractor
-USER attractor
-
-EXPOSE 3000
-CMD ["node", "src/server/index.js"]
-```
-
 ### Docker Compose Structure
 ```yaml
-version: '3.8'
 services:
   attractor:
     build: .
@@ -120,55 +95,24 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
-      - ./workflows:/app/workflows
+      - ./checkpoints:/app/checkpoints
+      - ./workflows:/app/workflows:ro
     env_file:
       - .env
-    depends_on:
-      redis:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 3
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  redis_data:
-```
-
-### Distributed Compose (with shared artifacts)
-```yaml
-services:
-  attractor:
-    volumes:
-      - artifacts_data:/app/data
-    deploy:
-      replicas: 3
-
-volumes:
-  artifacts_data:
 ```
 
 ### Environment Variables
 ```
 PORT=3000
-REDIS_HOST=redis
-REDIS_PORT=6379
-DATA_PATH=/app/data
-ARTIFACTS_PATH=/app/data/artifacts
-LOGS_PATH=/app/logs
+STATE_DIR=./data/state
+ARTIFACTS_DIR=./data/artifacts
+LOGS_DIR=./logs
+CHECKPOINTS_DIR=./checkpoints
 NODE_ENV=production
 ```
 
