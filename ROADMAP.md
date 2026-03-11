@@ -208,6 +208,8 @@ All major features implemented! ✅
 | Containerization | specs/containerization/ | ✅ Complete |
 | Distributed Deployment | specs/distributed-deployment/ | ✅ Complete |
 | Distributed Coordination | specs/distributed-coordination-fix/ | ✅ Complete |
+| Filesystem Handler | specs/filesystem-handler/ | ✅ Complete |
+| Frontend UI | specs/frontend-ui/ | 🔄 Spec Complete |
 
 ---
 
@@ -287,6 +289,7 @@ Implemented (March 2026):
 - ✅ Coordinator decisions published to Redis channel
 - ✅ All instances subscribe to coordinator decisions
 - ✅ Remote decisions broadcast to local WebSockets
+- ✅ Workflow chaining via `next_workflow` parameter
 
 Architecture:
 ```
@@ -299,6 +302,45 @@ Environment Variables:
 - `REDIS_PORT=6379` - Redis port
 
 See: `specs/distributed-coordination-fix/`
+
+### 16. Filesystem Handler
+**Priority:** High | **Status:** ✅ Complete
+
+Handler for file operations and shell command execution.
+
+Implemented:
+- Read, write, mkdir, delete, copy, exists operations
+- Shell command execution with output capture
+- Path sandboxing (prevents directory traversal)
+- Command whitelisting (npm, node, git, docker, etc.)
+- Timeout enforcement (default 30s, max 300s)
+- File size limits (10MB max)
+
+See: `specs/filesystem-handler/`
+
+### 17. Self-Building Workflows
+**Priority:** High | **Status:** ✅ Implemented
+
+Workflow that can build itself using the FilesystemHandler.
+
+Implemented:
+- `workflows/build-ui.dot` - 10-phase workflow to build frontend UI
+- Sequential phase execution via coordinator
+- Each phase uses filesystem handler to create files
+
+### 18. Frontend UI
+**Priority:** Medium | **Status:** 🔄 Spec Complete
+
+React-based pipeline visualization dashboard.
+
+Spec: `specs/frontend-ui/`
+
+Features:
+- Pipeline list with status badges
+- Graph view (Mermaid.js DAG visualization)
+- Timeline view (horizontal execution sequence)
+- Node details panel
+- Real-time updates via WebSocket
 
 ---
 
@@ -327,8 +369,10 @@ With these three, you have: "Generate code → run it → use output to refine �
 ## File Locations
 
 - Core: `src/index.js`, `src/pipeline/engine.js`
-- Handlers: `src/handlers/codergen.js`, `parallel.js`, `fanin.js`
+- Handlers: `src/handlers/codergen.js`, `parallel.js`, `fanin.js`, `filesystem.js`
 - LLM: `src/llm/adapters/`, `src/llm/types.js`
 - Server: `src/server/index.js`, `pipeline-manager.js`, `storage/filesystem.js`, `storage/redis.js`
+- Specs: `specs/frontend-ui/`, `specs/filesystem-handler/`, `specs/distributed-coordination-fix/`
+- Workflows: `workflows/build-ui.dot`
 - Examples: `examples/*.dot`
 - Specs: `specs/server-expansion/`, `specs/distributed-coordination-fix/`, `specs/archive/containerization/`, `specs/archive/distributed-deployment/`
