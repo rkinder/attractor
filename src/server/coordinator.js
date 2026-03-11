@@ -4,6 +4,7 @@
  */
 
 import fileStorage from './storage/filesystem.js';
+import redisClient from './storage/redis.js';
 import config from './config.js';
 import { StageStatus } from '../pipeline/outcome.js';
 
@@ -29,11 +30,16 @@ class CoordinatorService {
     this.workflowRules = new Map();
     this.pendingQuestions = new Map();
     this.eventEmitter = null;
+    this.pipelineManager = null;
     this.enabled = config.getCoordinator().enabled;
   }
 
   setEventEmitter(emitter) {
     this.eventEmitter = emitter;
+  }
+
+  setPipelineManager(pm) {
+    this.pipelineManager = pm;
   }
 
   registerWorkflowRule(workflowId, rule) {
@@ -96,9 +102,20 @@ class CoordinatorService {
 
   _defaultDecision(pipelineId, result, state) {
     const outcome = result?.outcome || result;
-    const status = outcome?.status;
+    const status = outcome?.status || (outcome?.success === true ? 'success' : outcome?.success === false ? 'fail' : undefined);
 
-    if (status === StageStatus.SUCCESS) {
+    if (status === StageStatus.SUCCESS || status === 'success') {
+      // If nextWorkflow is set in state (either at root or in context), trigger it
+      const nextWorkflow = state?.nextWorkflow || state?.context?.nextWorkflow;
+      if (nextWorkflow) {
+        return {
+          type: DecisionType.TRIGGER_NEXT,
+          reason: DecisionReason.SUCCESS,
+          pipelineId,
+          nextWorkflow: nextWorkflow,
+          timestamp: new Date().toISOString()
+        };
+      }
       return {
         type: DecisionType.COMPLETE,
         reason: DecisionReason.SUCCESS,
@@ -154,6 +171,7 @@ class CoordinatorService {
   }
 
   _broadcastDecision(decision) {
+    // Emit to local WebSocket connections
     this.eventEmitter.emit('coordinator_decision', decision);
     
     if (decision.type === DecisionType.REQUEST_HUMAN) {
@@ -169,6 +187,48 @@ class CoordinatorService {
         pipelineId: decision.pipelineId,
         nextWorkflow: decision.nextWorkflow
       });
+      
+      // Actually trigger the next workflow
+      if (decision.nextWorkflow && this.pipelineManager) {
+        this._triggerNextWorkflow(decision.nextWorkflow, decision.pipelineId);
+      }
+    }
+  }
+  
+  async _triggerNextWorkflow(workflowPath, sourcePipelineId) {
+    try {
+      console.log(`[Coordinator] Triggering next workflow: ${workflowPath} from pipeline ${sourcePipelineId}`);
+      
+      // Read the workflow file
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      let dotSource;
+      try {
+        dotSource = await fs.readFile(workflowPath, 'utf-8');
+      } catch (e) {
+        // Try relative to current directory
+        dotSource = await fs.readFile(path.resolve(process.cwd(), workflowPath), 'utf-8');
+      }
+      
+      // Create new pipeline
+      const execution = this.pipelineManager.create({
+        dotSource: dotSource,
+        autoApprove: false
+      });
+      
+      // Start execution
+      setImmediate(async () => {
+        try {
+          await this.pipelineManager.start(execution.id);
+          console.log(`[Coordinator] Started next pipeline: ${execution.id}`);
+        } catch (err) {
+          console.error(`[Coordinator] Failed to start next pipeline:`, err.message);
+        }
+      });
+      
+    } catch (error) {
+      console.error(`[Coordinator] Failed to trigger next workflow:`, error.message);
     }
   }
 

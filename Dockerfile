@@ -54,6 +54,13 @@ COPY docs ./docs
 RUN mkdir -p /app/logs /app/checkpoints /app/data/artifacts && \
     chown -R attractor:nodejs /app
 
+# Make logs directory writable for pipeline execution
+RUN chmod -R 755 /app/logs /app/checkpoints /app/data
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Switch to non-root user
 USER attractor
 

@@ -24,6 +24,12 @@ const defaults = {
     checkpointsDir: process.env.CHECKPOINTS_DIR || path.join(process.cwd(), 'checkpoints'),
     stateDir: process.env.STATE_DIR || path.join(process.cwd(), 'data', 'state')
   },
+  redis: {
+    enabled: process.env.REDIS_ENABLED === 'true',
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || undefined
+  },
   coordinator: {
     enabled: process.env.COORDINATOR_ENABLED === 'true',
     decisionHistoryDays: 7
@@ -89,6 +95,10 @@ class Config {
 
   getCoordinator() {
     return { ...this._config.coordinator };
+  }
+
+  getRedis() {
+    return { ...this._config.redis };
   }
 
   getArtifacts() {

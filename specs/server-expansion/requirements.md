@@ -12,35 +12,35 @@
 - [ ] Actions include: trigger_next, request_human, fail, archive
 - [ ] Decisions are logged and traceable
 
-### REQ-002: Redis State Persistence
+### REQ-002: Filesystem State Persistence
 **From Design**: FR-002
-**Description**: Store pipeline execution state in Redis for fast access
+**Description**: Store pipeline execution state in filesystem JSON files for persistence
 
 **Acceptance Criteria**:
-- [ ] Pipeline state stored in Redis hash `pipeline:{id}`
+- [ ] Pipeline state stored in JSON file `state/pipelines/{id}.json`
 - [ ] State includes: status, outcome, artifacts, timestamps
-- [ ] TTL set for automatic cleanup (configurable)
-- [ ] Fallback to in-memory if Redis unavailable
+- [ ] TTL not required (manual cleanup or retention policy)
+- [ ] Fallback to in-memory if filesystem unavailable
 
-### REQ-003: Redis Artifact Metadata Storage
+### REQ-003: Filesystem Artifact Metadata Storage
 **From Design**: FR-005
-**Description**: Store artifact metadata in Redis with filesystem for actual files
+**Description**: Store artifact metadata in filesystem with JSON index files
 
 **Acceptance Criteria**:
-- [ ] Artifact metadata in Redis hash `artifact:{pipeline_id}:meta`
+- [ ] Artifact metadata in JSON file `state/artifacts/{pipeline_id}/index.json`
 - [ ] Includes: type, path, size, checksum, timestamps
 - [ ] Files stored on filesystem under data/artifacts/
-- [ ] Query API for listing and searching via Redis
+- [ ] Query API for listing and searching via filesystem scan
 
 ### REQ-004: Queue Consumer
 **From Design**: FR-003
-**Description**: Consume workflow trigger messages from Redis queue
+**Description**: Consume workflow trigger messages from filesystem queue
 
 **Acceptance Criteria**:
-- [ ] Subscribe to `workflow:triggers` queue
+- [ ] Watch `queues/workflow-triggers/` directory for new JSON files
 - [ ] Parse message format: { workflow_path, context, trigger_type }
 - [ ] Create pipeline from triggered workflow
-- [ ] Acknowledge message after processing
+- [ ] Move processed files to `queues/workflow-triggers/processed/`
 
 ### REQ-005: Human Intervention Endpoints
 **From Design**: FR-004
@@ -79,7 +79,7 @@
 **Acceptance Criteria**:
 - [ ] Each pipeline writes to unique directory
 - [ ] No file name collisions (use UUIDs)
-- [ ] Redis metadata writes use pipeline ID prefix
+- [ ] Metadata writes use pipeline ID prefix in filename
 - [ ] No lock contention between pipelines
 
 ### REQ-009: Configuration Management
@@ -88,9 +88,9 @@
 
 **Acceptance Criteria**:
 - [ ] Config file or environment variables
-- [ ] Redis connection settings
+- [ ] State directory configuration
 - [ ] Artifact storage path configuration
-- [ ] Queue settings
+- [ ] Queue directory settings
 
 ## Interface Contracts
 
@@ -136,14 +136,21 @@ Response: { success: boolean }
 }
 ```
 
-### Redis Keys
+### Filesystem State Structure
 ```
-pipeline:{id}           - Hash: state, outcome, timestamps
-pipeline:{id}:artifacts - Set: artifact IDs
-artifact:{pipeline_id}:meta - Hash: artifact metadata by ID
-artifact:{pipeline_id}:index - List: artifact IDs for pipeline
-workflow:triggers       - List: incoming trigger messages
-coordinator:decisions   - List: decision history
+state/
+├── pipelines/
+│   └── {id}.json           # Pipeline state and metadata
+├── artifacts/
+│   └── {pipeline_id}/
+│       ├── index.json      # Artifact metadata index
+│       └── {uuid}_*        # Actual artifact files
+├── decisions/
+│   └── {id}.json           # Coordinator decisions
+└── queues/
+    └── workflow-triggers/
+        ├── pending/        # Unprocessed triggers
+        └── processed/     # Completed triggers
 ```
 
 ### Filesystem Structure

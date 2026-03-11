@@ -6,6 +6,7 @@
 
 import { PipelineExecution, PipelineStatus } from './pipeline-execution.js';
 import { Attractor } from '../index.js';
+import { coordinatorService } from './coordinator.js';
 
 export class PipelineManager {
   constructor() {
@@ -84,20 +85,32 @@ export class PipelineManager {
 
       if (execution.cancelled) {
         execution.status = PipelineStatus.CANCELLED;
-      } else if (result.success) {
+      } else if (result && result.success === true) {
         execution.status = PipelineStatus.COMPLETED;
         execution.outcomeStatus = 'success';
         execution.outcomeNotes = result.finalOutcome?.notes || 'Pipeline completed successfully';
+        
+        // Notify coordinator of completion
+        await coordinatorService.onPipelineComplete(id, {
+          success: true,
+          outcome: result.finalOutcome || result  // Use finalOutcome if available, else the whole result
+        });
       } else {
         execution.status = PipelineStatus.FAILED;
         execution.outcomeStatus = 'fail';
-        execution.outcomeNotes = result.finalOutcome?.notes || 'Pipeline failed';
+        execution.outcomeNotes = result?.failure_reason || result?.notes || 'Pipeline failed';
+        
+        // Notify coordinator of failure
+        await coordinatorService.onPipelineError(id, new Error(execution.outcomeNotes));
       }
     } catch (error) {
       execution.status = PipelineStatus.FAILED;
       execution.error = error.message;
       execution.outcomeStatus = 'fail';
       execution.outcomeNotes = error.message;
+      
+      // Notify coordinator of error
+      await coordinatorService.onPipelineError(id, error);
     }
 
     execution.completedAt = new Date().toISOString();

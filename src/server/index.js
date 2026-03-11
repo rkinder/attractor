@@ -11,6 +11,7 @@ import { WebSocketServer } from 'ws';
 import { EventEmitter } from 'events';
 import { PipelineManager } from './pipeline-manager.js';
 import { fileStorage } from './storage/filesystem.js';
+import { redisClient } from './storage/redis.js';
 import { coordinatorService } from './coordinator.js';
 import config from './config.js';
 
@@ -64,7 +65,7 @@ app.get('/pipelines/:id', (req, res) => {
 // Create new pipeline
 app.post('/pipelines', async (req, res) => {
   try {
-    const { dot_source, auto_approve, gateway } = req.body;
+    const { dot_source, auto_approve, gateway, next_workflow } = req.body;
 
     if (!dot_source) {
       return res.status(400).json({ error: 'dot_source is required' });
@@ -75,6 +76,13 @@ app.post('/pipelines', async (req, res) => {
       autoApprove: auto_approve || false,
       gateway
     });
+
+    // Initialize coordinator state with next_workflow if provided
+    if (next_workflow && config.getCoordinator().enabled) {
+      await coordinatorService.initializeState(execution.id, 'default', {
+        nextWorkflow: next_workflow
+      });
+    }
 
     // Start execution asynchronously
     setImmediate(async () => {
@@ -262,11 +270,17 @@ async function start() {
     // Initialize filesystem storage
     await fileStorage.initialize();
     
+    // Initialize Redis for pub/sub (if enabled)
+    const redisConnected = await redisClient.initialize();
+    
     // Set up coordinator with event emitter
     coordinatorService.setEventEmitter(eventEmitter);
     
     // Initialize pipeline manager
     await pipelineManager.initialize();
+    
+    // Set up coordinator with pipeline manager for triggering next workflows
+    coordinatorService.setPipelineManager(pipelineManager);
     
     // Set up coordinator event forwarding to WebSockets
     eventEmitter.on('coordinator_decision', (decision) => {
@@ -285,16 +299,50 @@ async function start() {
         data
       });
     });
+
+    // Set up Redis subscriptions for distributed coordination
+    if (redisConnected) {
+      await setupRedisSubscriptions();
+    }
     
     server.listen(PORT, () => {
       console.log(`Attractor server running on http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/health`);
       console.log(`Storage: filesystem at ${config.getStorage().baseDir}`);
+      console.log(`Redis: ${redisConnected ? 'connected' : 'disabled'}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
+}
+
+// Set up Redis subscriptions for distributed events
+async function setupRedisSubscriptions() {
+  // Subscribe to coordinator decisions from other instances
+  await redisClient.subscribeCoordinatorDecision((decision) => {
+    const instanceId = decision.instanceId;
+    const myInstanceId = redisClient.getInstanceId();
+    
+    // Skip if this decision originated from this instance
+    if (instanceId === myInstanceId) {
+      return;
+    }
+    
+    console.log(`[Redis] Received coordinator decision from ${instanceId}:`, decision.type);
+    
+    // Broadcast to local WebSocket connections
+    const execution = pipelineManager.get(decision.pipelineId);
+    if (execution) {
+      pipelineManager.broadcastToPipeline(decision.pipelineId, {
+        type: 'coordinator_decision',
+        data: decision,
+        source: 'redis'
+      });
+    }
+  });
+  
+  console.log('[Redis] Subscriptions set up for distributed coordination');
 }
 
 // Handle shutdown signals

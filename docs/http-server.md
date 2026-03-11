@@ -345,6 +345,15 @@ CHECKPOINTS_DIR=./checkpoints
 ### Distributed Deployment
 For multi-instance deployments, use a shared filesystem (NFS, EFS, etc.) mounted at the same path on all instances.
 
+For distributed coordination between instances, use Redis:
+
+```bash
+# Enable Redis for pub/sub
+REDIS_ENABLED=true
+REDIS_HOST=redis
+REDIS_PORT=6379
+```
+
 ## Examples
 
 ### Using curl
@@ -408,6 +417,9 @@ ws.on('message', (data) => {
 | `LOGS_DIR` | ./logs | Logs directory |
 | `CHECKPOINTS_DIR` | ./checkpoints | Checkpoints directory |
 | `COORDINATOR_ENABLED` | false | Enable workflow coordinator |
+| `REDIS_ENABLED` | false | Enable Redis for distributed coordination |
+| `REDIS_HOST` | localhost | Redis server host |
+| `REDIS_PORT` | 6379 | Redis server port |
 
 ## Error Handling
 

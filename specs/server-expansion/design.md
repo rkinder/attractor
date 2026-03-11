@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the expansion of the Attractor HTTP server to include a workflow coordinator service, persistent storage via Redis and filesystem, and containerization support. The expansion enables long-running, stateful workflows that can pause, resume, and trigger subsequent workflows based on execution results.
+This document outlines the expansion of the Attractor HTTP server to include a workflow coordinator service, persistent storage via filesystem, and containerization support. The expansion enables long-running, stateful workflows that can pause, resume, and trigger subsequent workflows based on execution results.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ External APIs/Workers → HTTP Server → CoordinatorService
                                            ↓
                     ┌───────────────────────┼───────────────────────┐
                     ↓                       ↓                       ↓
-                 Redis                  Filesystem                 Queue
+                 Redis                  Filesystem               Filesystem
                     ↓                       ↓                       ↓
                     │         ┌─────────────┴─────────────┐        │
                     └─────────┤        Attractor          ├────────┘
@@ -30,11 +30,12 @@ External APIs/Workers → HTTP Server → CoordinatorService
 
 | Data Type | Storage | Rationale |
 |-----------|---------|-----------|
-| Pipeline state | Redis | Fast reads/writes, TTL support, pub/sub |
-| Artifact metadata | Redis + Filesystem | Files on disk, metadata indexed in Redis |
-| Workflow triggers | Redis queue | Async processing, guaranteed delivery |
-| Coordinator decisions | Redis | Fast access, pub/sub for events |
-| Large log files | Filesystem | Redis has size limits |
+| Pipeline state | Filesystem (JSON) | Persistence, simple |
+| Artifact metadata | Filesystem (JSON) | Files on disk, metadata in JSON index |
+| Workflow triggers | Filesystem queue | Async processing, simple file-based queue |
+| Coordinator decisions | Filesystem (JSON) + Redis pub/sub | Persistence + cross-instance broadcast |
+| Large log files | Filesystem | No size limits |
+| Cross-instance events | Redis pub/sub | Real-time coordination |
 
 ## Functional Requirements
 
@@ -43,10 +44,10 @@ External APIs/Workers → HTTP Server → CoordinatorService
 **Statement**: WHEN a pipeline completes, the coordinator service SHALL analyze the output and determine the next action.
 **Rationale**: Enables automated workflow chaining without human intervention
 
-### FR-002: Redis State Persistence
+### FR-002: Filesystem State Persistence
 **Type**: Ubiquitous
-**Statement**: The system SHALL persist pipeline execution state to Redis for fast lookups and recovery.
-**Rationale**: Enables recovery from server restarts and distributed access
+**Statement**: The system SHALL persist pipeline execution state to filesystem JSON files for persistence and recovery.
+**Rationale**: Enables recovery from server restarts and distributed access via shared filesystem
 
 ### FR-003: Queue-Based Triggers
 **Type**: Event-driven  
@@ -58,10 +59,10 @@ External APIs/Workers → HTTP Server → CoordinatorService
 **Statement**: The system SHALL provide REST endpoints for humans to provide clarification, approval, or additional context during workflow execution.
 **Rationale**: Enables human-in-the-loop workflows via API instead of blocking
 
-### FR-005: Artifact Storage (Filesystem + Redis Index)
+### FR-005: Artifact Storage (Filesystem)
 **Type**: Ubiquitous
-**Statement**: The system SHALL store workflow artifacts (DOT files, logs, outputs) in filesystem with Redis indexing for retrieval.
-**Rationale**: Enables debugging, auditing, and reuse; avoids Redis size limits
+**Statement**: The system SHALL store workflow artifacts (DOT files, logs, outputs) in filesystem with JSON metadata for retrieval.
+**Rationale**: Enables debugging, auditing, and reuse; no external dependencies
 
 ### FR-006: WebSocket Events for Coordinator
 **Type**: Event-driven
@@ -72,6 +73,11 @@ External APIs/Workers → HTTP Server → CoordinatorService
 **Type**: Ubiquitous
 **Statement**: The system SHALL handle multiple pipelines writing artifacts concurrently without lock contention.
 **Rationale**: Enables high-throughput scenarios
+
+### FR-008: Distributed Coordination via Redis
+**Type**: Event-driven
+**Statement**: WHEN a coordinator decision is made, the system SHALL publish the decision to Redis for cross-instance coordination.
+**Rationale**: Enables multiple instances to be aware of coordinator decisions
 
 ## Non-Functional Requirements
 
@@ -88,7 +94,7 @@ External APIs/Workers → HTTP Server → CoordinatorService
 **Rationale**: Ensures minimal data loss on crash
 
 ### NFR-004: Horizontal Scalability
-**Statement**: The coordinator service SHALL support running multiple instances with Redis as the coordination backbone.
+**Statement**: The coordinator service SHALL support running multiple instances with shared filesystem for coordination.
 **Rationale**: Enables high-throughput scenarios
 
 ### NFR-005: Write Concurrency
@@ -97,9 +103,10 @@ External APIs/Workers → HTTP Server → CoordinatorService
 
 ## Dependencies
 
-- Redis (for state, metadata, queues, pub/sub)
-- Filesystem (for artifacts, logs)
+- Redis (for pub/sub, distributed coordination)
+- Filesystem (for state, metadata, artifacts, queues)
 - Docker/Docker Compose (for deployment)
+- Shared filesystem (NFS/EFS) for distributed deployments
 - Existing Attractor core
 
 ## Open Questions

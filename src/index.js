@@ -240,6 +240,7 @@ export class Attractor {
     const { FanInHandler } = await import('./handlers/fanin.js');
     const { StackManagerLoopHandler } = await import('./handlers/stack-manager-loop.js');
     const { MCPHandler } = await import('./handlers/mcp.js');
+    const { FilesystemHandler } = await import('./handlers/filesystem.js');
     const { MCPClient } = await import('./mcp/client.js');
     
     // Create MCP client and load configuration
@@ -255,6 +256,7 @@ export class Attractor {
     this.handlerRegistry.register('parallel.fan_in', new FanInHandler());
     this.handlerRegistry.register('stack.manager_loop', new StackManagerLoopHandler());
     this.handlerRegistry.register('mcp', new MCPHandler(mcpClient));
+    this.handlerRegistry.register('filesystem', new FilesystemHandler());
     
     // Store MCP client for cleanup
     this.mcpClient = mcpClient;

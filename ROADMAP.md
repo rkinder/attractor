@@ -194,11 +194,12 @@ All major features implemented! ✅
 |------|------|--------|
 | Documentation Audit | specs/documentation-fix/ | ✅ Complete |
 
-### Phase 5a: Infrastructure (Prerequisite)
+### Phase 5a: Infrastructure (Filesystem + Redis)
 | Item | Spec | Status |
 |------|------|--------|
-| Redis Integration | Part of server-expansion | ✅ Complete |
+| Filesystem Integration | Part of server-expansion | ✅ Complete |
 | Global Context | Part of server-expansion | ✅ Complete |
+| Redis pub/sub | For distributed coordination | ✅ Complete |
 
 ### Phase 5b: Production Features
 | Item | Spec | Status |
@@ -206,23 +207,26 @@ All major features implemented! ✅
 | Coordinator Service | specs/server-expansion/ | ✅ Complete |
 | Containerization | specs/containerization/ | ✅ Complete |
 | Distributed Deployment | specs/distributed-deployment/ | ✅ Complete |
+| Distributed Coordination | specs/distributed-coordination-fix/ | ✅ Complete |
 
 ---
 
 ## Phase 5: Production Infrastructure
 
-### Phase 5a: Shared Infrastructure (Redis)
+### Phase 5a: Shared Infrastructure (Filesystem + Redis)
 **Priority:** Critical | **Status:** ✅ Complete
 
 Implemented (March 2026):
 - ✅ Config module (`src/server/config.js`) with environment variable support
 - ✅ Filesystem storage (`src/server/storage/filesystem.js`) - JSON file-based
+- ✅ Redis client (`src/server/storage/redis.js`) - pub/sub for distributed coordination
 - ✅ CoordinatorService (`src/server/coordinator.js`) for workflow chaining
 - ✅ Human intervention API endpoints (/clarify, /approve, /context, /questions)
 - ✅ Coordinator WebSocket events for real-time updates
 - ✅ Pipeline state persistence in filesystem
 - ✅ Decision history in filesystem
-- ✅ No external dependencies (simpler deployment)
+- ✅ Cross-instance coordination via Redis pub/sub
+- ✅ Shared filesystem (NFS/EFS) for distributed deployments
 
 ---
 
@@ -253,7 +257,7 @@ Implemented:
 - .dockerignore and .env.example
 - docker-compose.override.yml for development
 
-See: `specs/containerization/`
+See: `specs/archive/containerization/`
 
 ### 14. Distributed Deployment
 **Priority:** High | **Status:** ✅ Complete
@@ -261,15 +265,40 @@ See: `specs/containerization/`
 Scale Attractor horizontally with multiple instances.
 
 Implemented:
-- Redis pub/sub for event distribution across instances
+- Shared filesystem for state distribution across instances
 - Pipeline ownership to prevent duplicate execution
-- Coordinator election via Redis locks
+- File-based coordinator election
 - Shared filesystem for cross-instance artifact access
 - Nginx load balancer configuration
 - Health-based routing and failover
 - docker-compose.distributed.yml for scaling
 
-See: `specs/distributed-deployment/`
+See: `specs/archive/distributed-deployment/`
+
+### 15. Distributed Coordination Fix
+**Priority:** Critical | **Status:** ✅ Complete
+
+Fixed coordination gap between multiple container instances.
+
+Implemented (March 2026):
+- ✅ Coordinator wired into pipeline execution flow
+- ✅ Redis pub/sub for cross-instance event broadcasting
+- ✅ Instance ID tracking to prevent duplicate processing
+- ✅ Coordinator decisions published to Redis channel
+- ✅ All instances subscribe to coordinator decisions
+- ✅ Remote decisions broadcast to local WebSockets
+
+Architecture:
+```
+Instance 1 → Pipeline completes → Redis pub/sub → Instance 2 receives decision
+```
+
+Environment Variables:
+- `REDIS_ENABLED=true` - Enable Redis (default: false)
+- `REDIS_HOST=localhost` - Redis host
+- `REDIS_PORT=6379` - Redis port
+
+See: `specs/distributed-coordination-fix/`
 
 ---
 
@@ -300,6 +329,6 @@ With these three, you have: "Generate code → run it → use output to refine �
 - Core: `src/index.js`, `src/pipeline/engine.js`
 - Handlers: `src/handlers/codergen.js`, `parallel.js`, `fanin.js`
 - LLM: `src/llm/adapters/`, `src/llm/types.js`
-- Server: `src/server/index.js`, `pipeline-manager.js`
+- Server: `src/server/index.js`, `pipeline-manager.js`, `storage/filesystem.js`, `storage/redis.js`
 - Examples: `examples/*.dot`
-- Specs: `specs/server-expansion/`, `specs/containerization/`, `specs/distributed-deployment/`
+- Specs: `specs/server-expansion/`, `specs/distributed-coordination-fix/`, `specs/archive/containerization/`, `specs/archive/distributed-deployment/`

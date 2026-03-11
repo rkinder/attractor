@@ -6,10 +6,10 @@ Enhance state management capabilities for workflows, including type-safe accesso
 
 ## Architecture Note
 
-**Global Cross-Workflow Context** will be implemented as part of Phase 5a (Shared Infrastructure) using Redis for persistence. This enables:
+**Global Cross-Workflow Context** will be implemented as part of Phase 5a (Shared Infrastructure) using filesystem for persistence. This enables:
 - Shared state across multiple workflow runs
-- Cross-instance data access in distributed deployments
-- TTL support for automatic cleanup
+- Cross-instance data access in distributed deployments via shared filesystem (NFS/EFS)
+- Manual retention policy for cleanup
 
 ---
 
@@ -130,16 +130,16 @@ Enhance state management capabilities for workflows, including type-safe accesso
 
 ### REQ-STATE-010: Global Cross-Workflow Context (Phase 5a)
 **From Design**: FR-001b  
-**Description**: Redis-backed context shared across workflow runs and instances.
+**Description**: Filesystem-backed context shared across workflow runs and instances.
 
 **Acceptance Criteria**:
-- [ ] Redis-backed global key-value store
+- [ ] Filesystem-backed global key-value store (JSON files)
 - [ ] Cross-workflow data sharing
-- [ ] TTL support for automatic expiration
-- [ ] Atomic operations for concurrent access
-- [ ] Support cross-instance access in distributed deployment
+- [ ] Manual retention policy for cleanup
+- [ ] File locking for concurrent access
+- [ ] Support cross-instance access via shared filesystem (NFS/EFS)
 
-**Implementation Note**: This will be implemented as part of `specs/server-expansion/` using Redis.
+**Implementation Note**: This will be implemented as part of `specs/server-expansion/` using filesystem storage.
 
 ---
 

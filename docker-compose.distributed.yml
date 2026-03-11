@@ -3,6 +3,20 @@
 # Usage: docker-compose -f docker-compose.distributed.yml up
 
 services:
+  # Redis for distributed coordination
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   # Attractor instances (scalable)
   attractor:
     build:
@@ -31,18 +45,25 @@ services:
       - LOGS_DIR=/app/logs
       - CHECKPOINTS_DIR=/app/checkpoints
       - COORDINATOR_ENABLED=true
+      - REDIS_ENABLED=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - CORS_ORIGIN=*
     volumes:
-      - attractor_data:/app/data
-      - attractor_logs:/app/logs
-      - attractor_checkpoints:/app/checkpoints
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./checkpoints:/app/checkpoints
       - ./workflows:/app/workflows:ro
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
+    entrypoint: ["/docker-entrypoint.sh"]
 
   # Nginx load balancer
   nginx:
@@ -56,9 +77,5 @@ services:
 
 # Named volumes - use NFS/EFS driver for distributed deployments
 volumes:
-  attractor_data:
-    driver: local
-  attractor_logs:
-    driver: local
-  attractor_checkpoints:
+  redis_data:
     driver: local

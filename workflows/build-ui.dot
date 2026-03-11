@@ -1,0 +1,73 @@
+digraph BuildAttractorUI {
+  // ============================================================
+  // Self-Building Workflow: Implement Attractor UI
+  // ============================================================
+  // This workflow builds the frontend UI in sequential phases.
+  // Each phase sets next_workflow to trigger the next phase.
+  // Start with: POST /pipelines { dot_source: "...", next_workflow: "workflows/build-ui.dot" }
+  // ============================================================
+
+  // PHASE 0: Initialize
+  start [shape=Mdiamond, label="Start Build UI", prompt="Starting UI implementation workflow"]
+  check_phase [label="Check Phase", handler="check_phase"]
+  
+  // PHASE 1: Project Setup
+  phase1 [label="Phase 1: Project Setup", prompt="Create frontend directory structure with package.json, vite.config.js, and initial files. Set up the React project structure under frontend/. Include dependencies: react, react-dom, react-router-dom, mermaid, axios, date-fns, vite, @vitejs/plugin-react. Create .env.example with VITE_API_URL=http://localhost:3000"]
+  
+  // PHASE 2: Core Components  
+  phase2 [label="Phase 2: Core Components", prompt="Create API service at frontend/src/services/api.js with getPipelines, getPipeline, getDecisions functions using axios. Create useWebSocket hook at frontend/src/hooks/useWebSocket.js for WebSocket connection to /pipelines/:id/events. Create StatusBadge component at frontend/src/components/StatusBadge.jsx with variants for pending (yellow), running (blue), success (green), fail (red), cancelled (gray)"]
+  
+  // PHASE 3: Pipeline List
+  phase3 [label="Phase 3: Pipeline List", prompt="Create PipelineList component at frontend/src/components/PipelineList.jsx displaying table with columns: status badge, pipeline ID (truncated), created time, duration, outcome. Add click handler to navigate to detail. Create PipelinesPage at frontend/src/pages/PipelinesPage.jsx that fetches /pipelines and displays PipelineList with auto-refresh every 10 seconds"]
+  
+  // PHASE 4: DOT to Mermaid
+  phase4 [label="Phase 4: DOT to Mermaid", prompt="Create utility at frontend/src/utils/dotToMermaid.js that converts DOT digraph syntax to Mermaid graph syntax. Handle: digraph keyword, node definitions with labels, edge definitions with ->, node shapes (convert to mermaid equivalent), basic styling. Return string in mermaid graph TD or LR format"]
+  
+  // PHASE 5: Graph View
+  phase5 [label="Phase 5: Graph View", prompt="Create PipelineGraph component at frontend/src/components/PipelineGraph.jsx using mermaid.js. Render DOT converted to mermaid. Color nodes by status: pending=yellow, running=blue, success=green, fail=red, skipped=gray. Add click handler to select node. Add legend showing status colors. Use dark theme matching #0f172a background"]
+  
+  // PHASE 6: Timeline View
+  phase6 [label="Phase 6: Timeline View", prompt="Create PipelineTimeline component at frontend/src/components/PipelineTimeline.jsx. Display horizontal timeline with nodes in execution order. Show duration bar for each node. Color code by status. Make scrollable for long executions. Show timestamps for start/end. Use flexbox layout with overflow-x: auto"]
+  
+  // PHASE 7: Node Details
+  phase7 [label="Phase 7: Node Details", prompt="Create NodeDetails component at frontend/src/components/NodeDetails.jsx as modal or slide-in panel. Display: node ID, type, status badge, prompt (for LLM nodes), response/output, execution duration in ms, error message if failed, timestamp. Add close button and click-outside-to-dismiss. Use portal or fixed positioning"]
+  
+  // PHASE 8: Integration
+  phase8 [label="Phase 8: Integration", prompt="Create PipelineDetailPage at frontend/src/pages/PipelineDetailPage.jsx with header showing pipeline ID, status, created/completed times. Add tab bar for Graph/Timeline switching. Integrate useWebSocket for real-time updates on detail page. Update App.jsx with React Router: routes for / and /pipelines/:id. Add 404 page. Style with CSS matching spec colors: background #0f172a, surface #1e293b, text #f8fafc"]
+  
+  // PHASE 9: Server Integration
+  phase9 [label="Phase 9: Server Integration", prompt="Modify src/server/index.js to serve frontend in production. Add: import path from 'path'; and in start(): if (process.env.NODE_ENV === 'production') { app.use(express.static(path.join(process.cwd(), 'frontend/dist'))); app.get('*', (req, res) => res.sendFile(path.join(process.cwd(), 'frontend/dist/index.html'))); }. Update docker-compose.yml to build frontend: add build context for frontend with npm run build, ensure frontend/dist is copied to serve"]
+  
+  // PHASE 10: Testing
+  phase10 [label="Phase 10: Testing", prompt="Test end-to-end: 1) Build frontend with npm run build, 2) Start server with NODE_ENV=production, 3) Create pipeline via API, 4) Open UI and verify pipeline appears in list, 5) Click pipeline and verify graph renders, 6) Switch to timeline view, 7) Verify real-time updates work"]
+
+  // COMPLETION
+  complete [shape=Msquare, label="UI Complete!", prompt="All phases complete. Frontend UI is ready for use at / (root) when in production mode"]
+
+  // Edges - sequential flow with phase checking
+  start -> check_phase
+  check_phase -> phase1
+  phase1 -> phase2
+  phase2 -> phase3
+  phase3 -> phase4
+  phase4 -> phase5
+  phase5 -> phase6
+  phase6 -> phase7
+  phase7 -> phase8
+  phase8 -> phase9
+  phase9 -> phase10
+  phase10 -> complete
+  
+  // Handlers for each phase
+  check_phase [handler="phase_checker"]
+  phase1 [handler="execute_phase"]
+  phase2 [handler="execute_phase"]
+  phase3 [handler="execute_phase"]
+  phase4 [handler="execute_phase"]
+  phase5 [handler="execute_phase"]
+  phase6 [handler="execute_phase"]
+  phase7 [handler="execute_phase"]
+  phase8 [handler="execute_phase"]
+  phase9 [handler="execute_phase"]
+  phase10 [handler="execute_phase"]
+}
