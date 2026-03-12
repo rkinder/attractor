@@ -45,4 +45,4 @@ config/secrets.json
 
 # Build artifacts
 dist/
-build/
+build/data/
