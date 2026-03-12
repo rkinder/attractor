@@ -663,19 +663,45 @@ IMPORTANT: Respond with the complete file content. Include ALL code - do not sum
   }
 
   _inferFilename(code) {
-    // Try to infer filename from export statements
-    const exportMatch = code.match(/(?:export|module\.exports|exports\.)\s*(?:default\s+)?(?:const|function|class|async\s+function)?\s*(\w+)/);
-    if (exportMatch) {
-      const name = exportMatch[1];
-      const ext = this._guessExtension(code);
-      return `generated/${name}.${ext}`;
+    const trimmed = code.trim();
+    
+    // Try to infer filename from module.exports = { ... }
+    const moduleExportMatch = trimmed.match(/^module\.exports\s*=\s*{([^}]+)}/m);
+    if (moduleExportMatch) {
+      const exportsObj = moduleExportMatch[1];
+      const firstExport = exportsObj.split(',')[0].split(':')[0].trim();
+      if (firstExport) {
+        const ext = this._guessExtension(trimmed);
+        return `generated/${firstExport}.${ext}`;
+      }
     }
 
-    // Try from import statements
-    const importMatch = code.match(/import\s+.*\s+from\s+['"]([^'"]+)['"]/);
+    // Try to infer filename from export default function
+    const exportDefaultFnMatch = trimmed.match(/export\s+default\s+(?:function\s+)?(\w+)/);
+    if (exportDefaultFnMatch) {
+      const ext = this._guessExtension(trimmed);
+      return `generated/${exportDefaultFnMatch[1]}.${ext}`;
+    }
+
+    // Try to infer filename from export function
+    const exportFnMatch = trimmed.match(/export\s+(?:async\s+)?function\s+(\w+)/);
+    if (exportFnMatch) {
+      const ext = this._guessExtension(trimmed);
+      return `generated/${exportFnMatch[1]}.${ext}`;
+    }
+
+    // Try to infer filename from export const/let/class
+    const exportConstMatch = trimmed.match(/export\s+(?:const|let|var|class)\s+(\w+)/);
+    if (exportConstMatch) {
+      const ext = this._guessExtension(trimmed);
+      return `generated/${exportConstMatch[1]}.${ext}`;
+    }
+
+    // Try from import { ... } from
+    const importMatch = trimmed.match(/import\s+{[^}]+}\s+from\s+['"]([^'"]+)['"]/);
     if (importMatch) {
       const name = path.basename(importMatch[1], path.extname(importMatch[1]));
-      const ext = this._guessExtension(code);
+      const ext = this._guessExtension(trimmed);
       return `generated/${name}.${ext}`;
     }
 
@@ -683,14 +709,15 @@ IMPORTANT: Respond with the complete file content. Include ALL code - do not sum
   }
 
   _guessExtension(code) {
-    if (code.includes('function') || code.includes('const ') || code.includes('let ')) {
+    if (code.includes('function') || code.includes('const ') || code.includes('let ') || code.includes('module.exports') || code.includes('exports.')) {
       if (code.includes(': ') && !code.includes('interface ') && !code.includes('type ')) {
         return 'ts';
       }
       return 'js';
     }
+    if (code.includes('def ') || (code.includes('import ') && code.includes(':'))) return 'py';
     if (code.includes('def ') || code.includes('import ')) return 'py';
-    if (code.includes('func ') && code.includes('package ')) return 'go';
+    if (code.includes('func ') || code.includes('package ')) return 'go';
     if (code.includes('fn ') && code.includes('let mut')) return 'rs';
     if (code.includes('public class') || code.includes('public static void')) return 'java';
     return 'txt';
