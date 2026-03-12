@@ -51,6 +51,21 @@ export class CodergenHandler extends Handler {
       prompt = this._injectPersona(personaPrompt, prompt, node.persona);
     }
 
+    // 3b. Handle target_file for read-modify-write pattern
+    const attrs = node.attributes || node;
+    let targetFile = attrs.target_file || attrs.target || node.target_file || node.target;
+    let existingContent = null;
+    if (targetFile) {
+      const targetPath = path.resolve(process.cwd(), targetFile);
+      try {
+        existingContent = await fs.readFile(targetPath, 'utf-8');
+        prompt = this._buildReadModifyPrompt(targetFile, existingContent, prompt);
+      } catch (error) {
+        // File doesn't exist, will be created
+        prompt = this._buildNewFilePrompt(targetFile, prompt);
+      }
+    }
+
     // 4. Determine optimal model if router available
     let selectedModel = null;
     let modelInfo = null;
@@ -123,6 +138,23 @@ export class CodergenHandler extends Handler {
 
     // 7. Write response to logs
     await fs.writeFile(path.join(stageDir, 'response.md'), responseText);
+
+    // 7b. Write to target_file if specified (read-modify-write pattern)
+    if (targetFile) {
+      const extractedCode = this._extractCodeFromResponse(responseText, targetFile);
+      if (extractedCode) {
+        const targetPath = path.resolve(process.cwd(), targetFile);
+        await fs.mkdir(path.dirname(targetPath), { recursive: true });
+        await fs.writeFile(targetPath, extractedCode, 'utf-8');
+        console.log(`[codergen] Wrote to ${targetFile}`);
+      }
+    } else {
+      // No target_file specified - look for FILE: directives in response
+      const filesWritten = await this._extractAndWriteFiles(responseText, stageDir);
+      if (filesWritten.length > 0) {
+        console.log(`[codergen] Wrote ${filesWritten.length} file(s): ${filesWritten.join(', ')}`);
+      }
+    }
 
     // 8. Write status and return outcome
     const outcome = Outcome.success(`Stage completed: ${node.id}`, {
@@ -393,6 +425,275 @@ ${userPrompt}
     };
     
     await fs.writeFile(statusPath, JSON.stringify(statusData, null, 2));
+  }
+
+  _buildReadModifyPrompt(targetFile, existingContent, taskPrompt) {
+    const ext = path.extname(targetFile).toLowerCase();
+    const language = this._getLanguage(ext);
+    
+    return `You are modifying an existing file: ${targetFile}
+
+Here is the current content of the file:
+\`\`\`${language}
+${existingContent}
+\`\`\`
+
+Now, perform the following task:
+${taskPrompt}
+
+IMPORTANT: Respond with the complete, modified file content. Include ALL code - do not summarize or use placeholders. The response should be the full file that will replace the existing content.`;
+  }
+
+  _buildNewFilePrompt(targetFile, taskPrompt) {
+    const ext = path.extname(targetFile).toLowerCase();
+    const language = this._getLanguage(ext);
+    
+    return `You are creating a new file: ${targetFile}
+
+Task:
+${taskPrompt}
+
+IMPORTANT: Respond with the complete file content. Include ALL code - do not summarize or use placeholders.`;
+  }
+
+  _getLanguage(ext) {
+    const languageMap = {
+      '.js': 'javascript',
+      '.jsx': 'javascript',
+      '.ts': 'typescript',
+      '.tsx': 'typescript',
+      '.py': 'python',
+      '.rb': 'ruby',
+      '.go': 'go',
+      '.rs': 'rust',
+      '.java': 'java',
+      '.c': 'c',
+      '.cpp': 'cpp',
+      '.h': 'c',
+      '.hpp': 'cpp',
+      '.css': 'css',
+      '.scss': 'scss',
+      '.html': 'html',
+      '.json': 'json',
+      '.yaml': 'yaml',
+      '.yml': 'yaml',
+      '.md': 'markdown',
+      '.sql': 'sql',
+      '.sh': 'bash',
+      '.bash': 'bash'
+    };
+    return languageMap[ext] || 'text';
+  }
+
+  _extractCodeFromResponse(responseText, targetFile) {
+    const ext = path.extname(targetFile).toLowerCase();
+    const language = this._getLanguage(ext);
+    
+    const backtick = String.fromCharCode(96); // backtick character
+    const codeBlockRegex = new RegExp(backtick + backtick + backtick + language + '\\s*([\\s\\S]*?)' + backtick + backtick + backtick, 'i');
+    let match = responseText.match(codeBlockRegex);
+    
+    if (!match) {
+      const anyCodeBlockRegex = new RegExp(backtick + '(\\w*)' + '\\s*([\\s\\S]*?)' + backtick + backtick + backtick, 'g');
+      let blocks = [];
+      let blockMatch;
+      while ((blockMatch = anyCodeBlockRegex.exec(responseText)) !== null) {
+        blocks.push(blockMatch[2]);
+      }
+      if (blocks.length > 0) {
+        match = { 1: blocks.reduce((a, b) => a.length > b.length ? a : b) };
+      }
+    }
+    
+    if (!match) {
+      const fileMentionRegex = new RegExp(targetFile + '[\\s\\S]*?(?:^|\\n)([\\s\\S]+)', 'm');
+      match = responseText.match(fileMentionRegex);
+    }
+    
+    if (match && match[1]) {
+      let code = match[1].trim();
+      code = code.replace(/^(?:Here is|Here is|Here\'s|This is|The|Updated)[\s\S]*?:\s*/i, '');
+      return code;
+    }
+    
+    const lines = responseText.split('\n');
+    if (lines.length > 5 && (lines[0].includes('{') || lines[0].includes('<'))) {
+      return responseText.trim();
+    }
+    
+    console.warn('[codergen] Could not extract code for ' + targetFile);
+    return null;
+  }
+
+  async _extractAndWriteFiles(responseText, stageDir) {
+    const filesWritten = [];
+    const projectRoot = process.cwd();
+
+    // Pattern 1: FILE: path/to/file.js (at start of line)
+    const fileDirectiveRegex = /^FILE:\s*(.+)$/gm;
+    let match;
+    while ((match = fileDirectiveRegex.exec(responseText)) !== null) {
+      const filePath = match[1].trim();
+      const code = this._extractCodeAfterDirective(responseText, match.index);
+      if (code) {
+        const fullPath = path.resolve(projectRoot, filePath);
+        await fs.mkdir(path.dirname(fullPath), { recursive: true });
+        await fs.writeFile(fullPath, code, 'utf-8');
+        filesWritten.push(filePath);
+      }
+    }
+
+    // Pattern 2: // FILE: path (inside code blocks)
+    if (filesWritten.length === 0) {
+      const inlineFileRegex = /\/\/\s*FILE:\s*(.+?)$/gm;
+      while ((match = inlineFileRegex.exec(responseText)) !== null) {
+        const filePath = match[1].trim();
+        const codeBlockMatch = responseText.match(new RegExp('```[\\s\\S]*?' + match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\s\\S]*?```'));
+        if (codeBlockMatch) {
+          const code = codeBlockMatch[0]
+            .replace(/```(?:\w+)?/, '')
+            .replace(/```$/, '')
+            .replace(/^\s*\/\/\s*FILE:.+$/m, '')
+            .trim();
+          if (code) {
+            const fullPath = path.resolve(projectRoot, filePath);
+            await fs.mkdir(path.dirname(fullPath), { recursive: true });
+            await fs.writeFile(fullPath, code, 'utf-8');
+            filesWritten.push(filePath);
+          }
+        }
+      }
+    }
+
+    // Pattern 3: // path/to/file.js (just a path as comment in code block)
+    if (filesWritten.length === 0) {
+      const commentPathRegex = /```(?:\w+)?\s*\n\s*\/\/\s*(.+?\.(?:js|ts|jsx|tsx|py|go|rs|java|c|cpp|h|html|css|json|yaml|yml|md|sql|sh|bash))\s*\n([\s\S]*?)```/g;
+      while ((match = commentPathRegex.exec(responseText)) !== null) {
+        const filePath = match[1].trim();
+        const code = match[2].trim();
+        if (code && code.length > 10) {
+          const fullPath = path.resolve(projectRoot, filePath);
+          await fs.mkdir(path.dirname(fullPath), { recursive: true });
+          await fs.writeFile(fullPath, code, 'utf-8');
+          filesWritten.push(filePath);
+        }
+      }
+    }
+
+    // Pattern 4: e.g., ```javascript:src/utils.js
+    if (filesWritten.length === 0) {
+      const codeBlockWithPathRegex = /```(\w+)?:?\s*([^\s]+)\s*\n([\s\S]*?)```/g;
+      while ((match = codeBlockWithPathRegex.exec(responseText)) !== null) {
+        const possiblePath = match[2].trim();
+        if (possiblePath.includes('.') && !possiblePath.includes(' ') && !possiblePath.startsWith('```')) {
+          const code = match[3].trim();
+          if (code.length > 20) {
+            const fullPath = path.resolve(projectRoot, possiblePath);
+            try {
+              await fs.mkdir(path.dirname(fullPath), { recursive: true });
+              await fs.writeFile(fullPath, code, 'utf-8');
+              filesWritten.push(possiblePath);
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+        }
+      }
+    }
+
+    // Pattern 5: Single code block - try to infer filename from exports
+    if (filesWritten.length === 0) {
+      const codeBlocks = this._findAllCodeBlocks(responseText);
+      if (codeBlocks.length === 1) {
+        const code = codeBlocks[0].code;
+        const inferredPath = this._inferFilename(code);
+        if (inferredPath) {
+          const fullPath = path.resolve(projectRoot, inferredPath);
+          await fs.mkdir(path.dirname(fullPath), { recursive: true });
+          await fs.writeFile(fullPath, code, 'utf-8');
+          filesWritten.push(inferredPath);
+        }
+      }
+    }
+
+    if (filesWritten.length > 0) {
+      console.log('[codergen] Auto-wrote files: ' + filesWritten.join(', '));
+    }
+    return filesWritten;
+  }
+
+  _extractCodeAfterDirective(responseText, directiveIndex) {
+    const afterDirective = responseText.slice(directiveIndex);
+    const lines = afterDirective.split('\n');
+    let codeStart = -1;
+    let inCodeBlock = false;
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.trim().startsWith('```')) {
+        if (inCodeBlock) {
+          // End of code block
+          break;
+        } else {
+          inCodeBlock = true;
+          codeStart = i + 1;
+        }
+      }
+    }
+
+    if (codeStart > 0) {
+      const codeLines = lines.slice(codeStart, lines.findIndex((l, idx) => idx > codeStart && l.trim().startsWith('```')));
+      return codeLines.join('\n').trim();
+    }
+
+    // No code block - try to get content after blank lines
+    const content = afterDirective.slice(afterDirective.indexOf('\n')).trim();
+    return content || null;
+  }
+
+  _findAllCodeBlocks(responseText) {
+    const blocks = [];
+    const backtick = String.fromCharCode(96);
+    const regex = new RegExp(backtick + '{3}(\\w*)\\s*\\n([\\s\\S]*?)' + backtick + '{3}', 'g');
+    let match;
+    while ((match = regex.exec(responseText)) !== null) {
+      blocks.push({ language: match[1], code: match[2].trim() });
+    }
+    return blocks;
+  }
+
+  _inferFilename(code) {
+    // Try to infer filename from export statements
+    const exportMatch = code.match(/(?:export|module\.exports|exports\.)\s*(?:default\s+)?(?:const|function|class|async\s+function)?\s*(\w+)/);
+    if (exportMatch) {
+      const name = exportMatch[1];
+      const ext = this._guessExtension(code);
+      return `generated/${name}.${ext}`;
+    }
+
+    // Try from import statements
+    const importMatch = code.match(/import\s+.*\s+from\s+['"]([^'"]+)['"]/);
+    if (importMatch) {
+      const name = path.basename(importMatch[1], path.extname(importMatch[1]));
+      const ext = this._guessExtension(code);
+      return `generated/${name}.${ext}`;
+    }
+
+    return null;
+  }
+
+  _guessExtension(code) {
+    if (code.includes('function') || code.includes('const ') || code.includes('let ')) {
+      if (code.includes(': ') && !code.includes('interface ') && !code.includes('type ')) {
+        return 'ts';
+      }
+      return 'js';
+    }
+    if (code.includes('def ') || code.includes('import ')) return 'py';
+    if (code.includes('func ') && code.includes('package ')) return 'go';
+    if (code.includes('fn ') && code.includes('let mut')) return 'rs';
+    if (code.includes('public class') || code.includes('public static void')) return 'java';
+    return 'txt';
   }
 }
 

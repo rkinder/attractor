@@ -1,0 +1,30 @@
+digraph TestTargetFile {
+  // Test workflow for target_file functionality
+  
+  start [shape=Mdiamond, label="Start Test"]
+  
+  // Test 1: Create new file
+  create_file [label="Create New File", 
+    prompt="Create a simple hello world function in JavaScript. Export a function called greet that takes a name and returns 'Hello, ' + name + '!'"
+    target_file="test-output/greet.js"
+    handler="codergen"]
+  
+  // Test 2: Modify existing file  
+  modify_file [label="Modify Existing File",
+    prompt="Add an exported function called farewell that returns 'Goodbye, ' + name + '!'",
+    target_file="test-output/greet.js"
+    handler="codergen"]
+  
+  // Test 3: Verify file exists
+  verify [label="Verify Files",
+    handler="filesystem"
+    operation="read"
+    path="test-output/greet.js"]
+  
+  complete [shape=Msquare, label="Test Complete"]
+  
+  start -> create_file
+  create_file -> modify_file
+  modify_file -> verify
+  verify -> complete
+}
