@@ -1,0 +1,42 @@
+digraph PersonaTest {
+    graph [rankdir=TB]
+    
+    start [shape=Mdiamond, label="Start: Persona Test"]
+    exit [shape=Msquare, label="Complete"]
+    
+    // ============================================================
+    // PHASE 1: Research (Understand the problem)
+    // ============================================================
+    
+    research [
+        label="Research: Understand Problem",
+        prompt="Analyze this programming task: Create a function that calculates the Fibonacci sequence up to n numbers. Consider edge cases and performance.",
+        persona="researcher"
+    ]
+    
+    // ============================================================
+    // PHASE 2: Development (Write the solution)
+    // ============================================================
+    
+    develop [
+        label="Develop: Write Fibonacci Function",
+        prompt="Write a JavaScript function called fibonacci that takes a number n and returns an array of the first n Fibonacci numbers. Include error handling for invalid inputs. Write clean, well-documented code.",
+        persona="developer"
+    ]
+    
+    // ============================================================
+    // PHASE 3: Review (Review the solution)
+    // ============================================================
+    
+    review [
+        label="Review: Code Review",
+        prompt="Review the developed Fibonacci function. Check for: correctness, edge cases, performance, code quality, and documentation. Provide specific feedback.",
+        persona="reviewer"
+    ]
+    
+    // ============================================================
+    // FLOW
+    // ============================================================
+    
+    start -> research -> develop -> review -> exit
+}
