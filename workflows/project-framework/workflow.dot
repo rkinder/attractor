@@ -15,6 +15,7 @@ digraph ProjectFramework {
     initial_intake [
         label="Initial Requirement Intake",
         prompt_file="prompts/initial_requirement_intake.txt",
+        persona="researcher",
         complexity="medium",
         timeout="300s"
     ]
@@ -22,6 +23,7 @@ digraph ProjectFramework {
     generalize_problem [
         label="Generalize Problem Statement",
         prompt_file="prompts/generalize_problem.txt",
+        persona="researcher",
         complexity="medium",
         timeout="300s"
     ]
@@ -34,6 +36,7 @@ digraph ProjectFramework {
         shape=doublecircle,
         label="Clarification Interview",
         prompt_file="prompts/clarification_interview.txt",
+        persona="orchestrator",
         complexity="medium",
         timeout="600s"
     ]
@@ -41,6 +44,7 @@ digraph ProjectFramework {
     assess_interview_output [
         label="Assess Interview Output",
         prompt="Analyze the interview responses to determine if requirements are sufficiently clear. Identify any gaps, ambiguities, or areas needing further clarification.",
+        persona="reviewer",
         context_hint="documentation",
         complexity="low",
         timeout="120s"
@@ -53,6 +57,7 @@ digraph ProjectFramework {
     develop_design [
         label="Develop Design Document",
         prompt_file="prompts/develop_design.txt",
+        persona="architect",
         complexity="high",
         timeout="600s"
     ]
@@ -60,6 +65,7 @@ digraph ProjectFramework {
     develop_requirements [
         label="Develop Requirements Document", 
         prompt_file="prompts/develop_requirements.txt",
+        persona="developer",
         complexity="high",
         timeout="600s"
     ]
@@ -67,6 +73,7 @@ digraph ProjectFramework {
     develop_tasks [
         label="Develop Tasks Document",
         prompt_file="prompts/develop_tasks.txt",
+        persona="developer",
         complexity="high",
         timeout="600s"
     ]
@@ -78,6 +85,7 @@ digraph ProjectFramework {
     analyze_requirements_completeness [
         label="Analyze Requirements Completeness",
         prompt_file="prompts/analyze_requirements_completeness.txt",
+        persona="reviewer",
         complexity="high",
         timeout="450s"
     ]
@@ -90,6 +98,7 @@ digraph ProjectFramework {
         shape=doublecircle,
         label="Independent Test Generation",
         prompt_file="prompts/independent_test_generation.txt",
+        persona="qa_engineer",
         complexity="high",
         timeout="900s"
     ]
@@ -102,6 +111,7 @@ digraph ProjectFramework {
         shape=doublecircle,
         label="Architectural Review",
         prompt_file="prompts/architectural_review.txt",
+        persona="architect",
         complexity="high",
         timeout="600s"
     ]
@@ -114,6 +124,7 @@ digraph ProjectFramework {
         shape=doublecircle,
         label="Security Review",
         prompt_file="prompts/security_review.txt",
+        persona="reviewer",
         complexity="high",
         timeout="600s"
     ]
@@ -125,6 +136,7 @@ digraph ProjectFramework {
     consolidate_specifications [
         label="Consolidate Specifications",
         prompt_file="prompts/consolidate_specifications.txt",
+        persona="orchestrator",
         complexity="medium",
         timeout="300s"
     ]
@@ -136,6 +148,7 @@ digraph ProjectFramework {
     spec_approval [
         shape=hexagon,
         label="Specification Approval",
+        persona="orchestrator",
         prompt="Review the complete specification package including design, requirements, tasks, test cases, and review findings. Approve for implementation or request revisions."
     ]
     

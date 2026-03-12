@@ -14,17 +14,44 @@ export class CodergenHandler extends Handler {
     this.backend = backend; // CodergenBackend implementation or null for simulation
     this.stylesheetApplicator = stylesheetApplicator;
     this.modelRouter = modelRouter; // Smart model selection
+    this.personaCache = new Map(); // Cache for loaded personas
+    this.personasBasePath = null; // Base path for persona files
+  }
+
+  /**
+   * Set the base path for persona files
+   * @param {string} basePath - The directory containing the personas/ folder
+   */
+  setPersonasBasePath(basePath) {
+    this.personasBasePath = basePath;
   }
 
   async execute(node, context, graph, logsRoot) {
-    // 1. Build prompt
+    // 1. Load persona if specified
+    let personaPrompt = null;
+    if (node.persona) {
+      personaPrompt = await this._loadPersona(node.persona, graph);
+    }
+
+    // 2. Build prompt
     let prompt = node.prompt;
+    if (!prompt) {
+      // Try loading from prompt_file attribute
+      if (node.prompt_file) {
+        prompt = await this._loadPromptFile(node.prompt_file, graph);
+      }
+    }
     if (!prompt) {
       prompt = node.label;
     }
     prompt = this._expandVariables(prompt, graph, context);
 
-    // 2. Determine optimal model if router available
+    // 3. Inject persona into prompt if available
+    if (personaPrompt) {
+      prompt = this._injectPersona(personaPrompt, prompt, node.persona);
+    }
+
+    // 4. Determine optimal model if router available
     let selectedModel = null;
     let modelInfo = null;
     if (this.modelRouter && this.backend) {
@@ -38,10 +65,18 @@ export class CodergenHandler extends Handler {
       };
     }
 
-    // 3. Write prompt and model info to logs
+    // 5. Write prompt and model info to logs
     const stageDir = path.join(logsRoot, node.id);
     await fs.mkdir(stageDir, { recursive: true });
     await fs.writeFile(path.join(stageDir, 'prompt.md'), prompt);
+    
+    // Write persona info if used
+    if (personaPrompt) {
+      await fs.writeFile(
+        path.join(stageDir, 'persona.md'), 
+        personaPrompt
+      );
+    }
     
     if (modelInfo) {
       await fs.writeFile(
@@ -50,7 +85,7 @@ export class CodergenHandler extends Handler {
       );
     }
 
-    // 3. Call LLM backend with stylesheet support
+    // 6. Call LLM backend with stylesheet support
     let responseText;
     if (this.backend) {
       try {
@@ -86,10 +121,10 @@ export class CodergenHandler extends Handler {
       responseText = `[Simulated] Response for stage: ${node.id}`;
     }
 
-    // 4. Write response to logs
+    // 7. Write response to logs
     await fs.writeFile(path.join(stageDir, 'response.md'), responseText);
 
-    // 5. Write status and return outcome
+    // 8. Write status and return outcome
     const outcome = Outcome.success(`Stage completed: ${node.id}`, {
       [Context.LAST_STAGE]: node.id,
       [Context.LAST_RESPONSE]: this._truncate(responseText, 200)
@@ -97,6 +132,119 @@ export class CodergenHandler extends Handler {
     
     await this._writeStatus(stageDir, outcome);
     return outcome;
+  }
+
+  /**
+   * Load a persona by name
+   * @param {string} personaName - The name of the persona (without extension)
+   * @param {object} graph - The workflow graph object
+   * @returns {Promise<string|null>} - The persona prompt content or null if not found
+   */
+  async _loadPersona(personaName, graph) {
+    // Check cache first
+    if (this.personaCache.has(personaName)) {
+      return this.personaCache.get(personaName);
+    }
+
+    const personaExtensions = ['.md', '.txt'];
+
+    // Determine search paths for personas
+    const searchPaths = [];
+
+    // 1. Workflow-local personas: workflow-dir/../personas/
+    if (graph.workflowDir) {
+      const workflowDir = path.dirname(graph.workflowDir);
+      for (const ext of personaExtensions) {
+        searchPaths.push(path.join(workflowDir, 'personas', `${personaName}${ext}`));
+      }
+    }
+
+    // 2. Project-level personas: process.cwd()/personas/
+    if (this.personasBasePath) {
+      for (const ext of personaExtensions) {
+        searchPaths.push(path.join(this.personasBasePath, `${personaName}${ext}`));
+      }
+    } else {
+      for (const ext of personaExtensions) {
+        searchPaths.push(path.join(process.cwd(), 'personas', `${personaName}${ext}`));
+      }
+    }
+
+    // 3. Alternative: personas/ in same directory as workflow file
+    if (graph.workflowDir) {
+      const workflowDir = path.dirname(graph.workflowDir);
+      for (const ext of personaExtensions) {
+        searchPaths.push(path.join(workflowDir, 'personas', `${personaName}${ext}`));
+      }
+    }
+
+    // Try each path
+    for (const personaPath of searchPaths) {
+      try {
+        const content = await fs.readFile(personaPath, 'utf-8');
+        this.personaCache.set(personaName, content);
+        return content;
+      } catch {
+        // File doesn't exist at this path, try next
+      }
+    }
+
+    console.warn(`Persona '${personaName}' not found in any of these locations: ${searchPaths.join(', ')}`);
+    return null;
+  }
+
+  /**
+   * Load a prompt file
+   * @param {string} promptFile - The path to the prompt file (relative or absolute)
+   * @param {object} graph - The workflow graph object
+   * @returns {Promise<string>} - The prompt content
+   */
+  async _loadPromptFile(promptFile, graph) {
+    const searchPaths = [];
+
+    // 1. Relative to workflow file
+    if (graph.workflowDir) {
+      const workflowDir = path.dirname(graph.workflowDir);
+      searchPaths.push(path.join(workflowDir, promptFile));
+    }
+
+    // 2. Relative to current working directory
+    searchPaths.push(path.join(process.cwd(), promptFile));
+
+    // 3. Try as absolute path
+    searchPaths.push(promptFile);
+
+    for (const promptPath of searchPaths) {
+      try {
+        const content = await fs.readFile(promptPath, 'utf-8');
+        return content;
+      } catch {
+        // Try next path
+      }
+    }
+
+    throw new Error(`Prompt file '${promptFile}' not found in any of these locations: ${searchPaths.join(', ')}`);
+  }
+
+  /**
+   * Inject persona context into the user prompt
+   * @param {string} personaPrompt - The persona definition
+   * @param {string} userPrompt - The user's task prompt
+   * @param {string} personaName - The name of the persona (for logging)
+   * @returns {string} - The combined prompt with persona context
+   */
+  _injectPersona(personaPrompt, userPrompt, personaName) {
+    return `${personaPrompt}
+
+---
+
+## Current Task
+
+${userPrompt}
+
+---
+
+*This task is being executed with the "${personaName}" persona.*`;
   }
 
   _expandVariables(text, graph, context) {
@@ -205,6 +353,21 @@ export class CodergenHandler extends Handler {
                                promptLower.includes('create') ||
                                promptLower.includes('write') ||
                                promptLower.includes('design');
+
+    // Also consider persona in task type determination
+    if (node.persona) {
+      const personaToTaskType = {
+        'orchestrator': 'project_management',
+        'developer': 'implementation',
+        'reviewer': 'code_analysis',
+        'researcher': 'research',
+        'architect': 'system_design',
+        'qa_engineer': 'testing'
+      };
+      if (personaToTaskType[node.persona]) {
+        taskType = personaToTaskType[node.persona];
+      }
+    }
 
     return {
       taskType,

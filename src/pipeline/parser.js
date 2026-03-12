@@ -37,6 +37,8 @@ export class Node {
   get llmProvider() { return this.get('llm_provider', ''); }
   get reasoningEffort() { return this.get('reasoning_effort', 'high'); }
   get autoStatus() { return this.get('auto_status', 'false') === 'true'; }
+  get persona() { return this.get('persona', ''); }
+  get prompt_file() { return this.get('prompt_file', ''); }
   get allowPartial() { return this.get('allow_partial', 'false') === 'true'; }
 
   _parseDuration(value) {
