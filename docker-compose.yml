@@ -26,7 +26,6 @@ services:
       target: production
     image: attractor:production
     container_name: attractor
-    user: root
     ports:
       - "${SERVER_PORT:-3000}:3000"
     environment:
@@ -48,8 +47,8 @@ services:
       - attractor_logs:/app/logs
       - attractor_checkpoints:/app/checkpoints
       - ./workflows:/app/workflows:ro
-      # Use named volume for generated code (avoids host permission issues)
-      - attractor_generated:/app/generated
+      # Mount target repo for generated code (default: ./generated -> /app/generated)
+      - ${GENERATED_DIR:-./generated}:/app/generated
     depends_on:
       redis:
         condition: service_healthy
@@ -78,6 +77,4 @@ volumes:
   attractor_logs:
     driver: local
   attractor_checkpoints:
-    driver: local
-  attractor_generated:
     driver: local
