@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    image: attractor:latest
+    image: attractor:production
     container_name: attractor
     ports:
       - "${SERVER_PORT:-3000}:3000"
@@ -39,10 +39,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - KILO_API_KEY=${KILO_API_KEY:-}
-      - KILO_CONFIG=${KILO_CONFIG:-balanced}
+      - LMSTUDIO_BASE_URL=${LMSTUDIO_BASE_URL:-http://host.docker.internal:1234/v1}
+      - LMSTUDIO_MODEL=${LMSTUDIO_MODEL:-qwen/qwen3.5-9b}
+      - LMSTUDIO_API_KEY=${LMSTUDIO_API_KEY:-lm-studio}
     volumes:
       - attractor_data:/app/data
       - attractor_logs:/app/logs
@@ -52,26 +51,20 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    entrypoint: ["/docker-entrypoint.sh"]
+    command: ["node", "src/server/index.js"]
 
-  # Optional: Nginx reverse proxy
-  nginx:
-    image: nginx:alpine
-    container_name: attractor_nginx
-    ports:
-      - "${NGINX_PORT:-80}:80"
-      - "${NGINX_SSL_PORT:-443}:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - attractor
-    restart: unless-stopped
+  # # Optional: Nginx reverse proxy (disabled for now)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: attractor_nginx
+  #   ports:
+  #     - "${NGINX_PORT:-80}:80"
+  #     - "${NGINX_SSL_PORT:-443}:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - attractor
+  #   restart: unless-stopped
 
 # Named volumes for data persistence
 volumes:

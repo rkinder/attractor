@@ -51,7 +51,7 @@ COPY workflows ./workflows
 COPY docs ./docs
 
 # Create directories for runtime with proper permissions
-RUN mkdir -p /app/logs /app/checkpoints /app/data/artifacts && \
+RUN mkdir -p /app/logs /app/checkpoints /app/data/artifacts /app/data/state && \
     chown -R attractor:nodejs /app
 
 # Make logs directory writable for pipeline execution

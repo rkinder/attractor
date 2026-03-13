@@ -4,9 +4,11 @@
  * Handles creating, tracking, and canceling pipeline executions
  */
 
+import path from 'path';
 import { PipelineExecution, PipelineStatus } from './pipeline-execution.js';
 import { Attractor } from '../index.js';
 import { coordinatorService } from './coordinator.js';
+import { config } from './config.js';
 
 export class PipelineManager {
   constructor() {
@@ -72,7 +74,7 @@ export class PipelineManager {
                           execution.dotSource.trim().startsWith('graph');
       
       const options = {
-        logsRoot: `./logs/${id}`,
+        logsRoot: path.join(config.get('storage.logsDir'), id),
         autoApprove: execution.autoApprove
       };
       
