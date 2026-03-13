@@ -1,0 +1,91 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0f172a;
+  color: #f8fafc;
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  width: 240px;
+  background-color: #1e293b;
+  border-right: 1px solid #334155;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 1rem 0;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 1rem;
+}
+
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+.menu-item.active {
+  background-color: #3b82f6;
+  color: #fff;
+}
+
+.menu-icon {
+  font-size: 1.25rem;
+}
+
+.menu-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.app {
+  min-height: 100vh;
+}

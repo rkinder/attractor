@@ -9,11 +9,17 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { EventEmitter } from 'events';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { PipelineManager } from './pipeline-manager.js';
 import { fileStorage } from './storage/filesystem.js';
 import { redisClient } from './storage/redis.js';
 import { coordinatorService } from './coordinator.js';
 import config from './config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const eventEmitter = new EventEmitter();
@@ -26,6 +32,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type']
 }));
 app.use(express.json({ limit: '10mb' }));
+
+// Serve frontend static files in production (only if dist exists)
+const frontendDistPath = path.join(process.cwd(), 'frontend', 'dist');
+const frontendDistExists = fs.existsSync(frontendDistPath);
+if (frontendDistExists) {
+  console.log(`Serving frontend from: ${frontendDistPath}`);
+}
 
 // Initialize pipeline manager
 const pipelineManager = new PipelineManager();
@@ -194,6 +207,17 @@ app.get('/pipelines/:id/decisions', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Serve frontend for all non-API routes in production
+if (frontendDistExists) {
+  app.use(express.static(frontendDistPath));
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/pipelines') || req.path.startsWith('/health')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
 
 // Create HTTP server
 const server = createServer(app);
