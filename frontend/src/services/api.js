@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -43,7 +43,7 @@ export const getPipelines = async (params = {}) => {
     return response.data
   } catch (error) {
     if (error.response?.status === 404) {
-      return { error: 'No pipelines found' }
+      return []
     }
     throw error
   }
@@ -64,10 +64,10 @@ export const getPipeline = async (pipelineId) => {
 export const getDecisions = async (pipelineId, params = {}) => {
   try {
     const response = await api.get(`/pipelines/${pipelineId}/decisions`, { params })
-    return response.data
+    return response.data.decisions || []
   } catch (error) {
     if (error.response?.status === 404) {
-      return { error: 'No decisions found for this pipeline' }
+      return []
     }
     throw error
   }
