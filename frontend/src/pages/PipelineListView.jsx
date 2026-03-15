@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getPipelines } from '../services/api'
 import PageLayout from '../components/PageLayout'
 /**
@@ -6,6 +7,7 @@ import PageLayout from '../components/PageLayout'
  * Displays list of all pipelines with search and filter
  */
 function PipelineListView() {
+  const navigate = useNavigate()
   const [pipelines, setPipelines] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -52,8 +54,7 @@ function PipelineListView() {
 
   // Navigate to pipeline detail
   const navigateToDetail = (pipelineId) => {
-    console.log(`Navigating to pipeline: ${pipelineId}`)
-    // In actual implementation, use router.push('/pipelines/${pipelineId}')
+    navigate(`/pipelines/${pipelineId}`)
   }
 
   return (

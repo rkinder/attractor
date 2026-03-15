@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
-import { getPipeline, getDecisions } from '../services/api'
+import { useParams, useNavigate } from 'react-router-dom'
+import { getPipeline } from '../services/api'
 import PageLayout from '../components/PageLayout'
 import PipelineGraph from '../components/PipelineGraph'
 import PipelineTimeline from '../components/PipelineTimeline'
 import NodeDetails from '../components/NodeDetails'
-import PipelineListView from './PipelineListView'
 /**
  * PipelineDetailPage Component
  * Displays detailed view of a pipeline
  */
 function PipelineDetailPage() {
   const { pipelineId } = useParams()
+  const navigate = useNavigate()
   const [pipeline, setPipeline] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -41,7 +41,7 @@ function PipelineDetailPage() {
 
   // Navigate back to list
   const handleBack = () => {
-    console.log('Navigate back to pipeline list')
+    navigate('/pipelines')
   }
 
   // Get status color
