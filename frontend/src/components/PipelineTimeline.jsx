@@ -307,7 +307,7 @@ function PipelineTimeline({
           <div className="info-item">
             <span className="info-label">Last Update:</span>
             <span className="info-value">
-              {formatRelativeTime(pipelineData?.updated_at || now)}
+              {formatRelativeTime(pipelineData?.updated_at || new Date())}
             </span>
           </div>
         </div>
