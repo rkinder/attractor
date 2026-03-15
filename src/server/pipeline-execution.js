@@ -30,6 +30,7 @@ export class PipelineExecution {
 
   toJSON() {
     return {
+      id: this.id,
       pipeline_id: this.id,
       status: this.status,
       created_at: this.createdAt,
